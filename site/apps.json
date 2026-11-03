@@ -27,6 +27,29 @@
       "mac": null
     },
     {
+      "id": "goedusplit",
+      "name": "Goedu-Split",
+      "symbol": "%",
+      "color": "#1f8a70",
+      "category": "평가",
+      "summary": "NEIS 정오표와 문항정보표로 성취평가 결과를 분석하고 예상정답률을 설계하는 도구",
+      "features": [
+        "전체 성취도·문항 분석·답지반응분포·성취기준별 결과",
+        "문항별 목표 성취수준과 A~E 예상정답률로 분할점수 계산",
+        "NEIS 입력표 만들기, 학생 성적 자료는 PC 밖으로 보내지 않음"
+      ],
+      "requirements": "NEIS 학생답 정오표·문항정보표 엑셀. HWP 시험지를 읽으려면 Node.js와 kordoc이 필요합니다(HWPX·PDF는 없어도 됨).",
+      "start": "Goedu-Split 실행 → 입력 데이터에서 정오표·문항정보표 선택 → 분석 실행",
+      "windows": null,
+      "mac": {
+        "version": "1.0.17",
+        "size": "189MB",
+        "sha256": "89368e6204a1838bc859468c9c1eab433fb38caa4991324ce636b21a22bac968",
+        "start": "압축을 풀어 나온 Goedu-Split 앱을 응용 프로그램 폴더로 옮긴 뒤 실행 (Apple Silicon, macOS 11 이상)"
+      },
+      "source": null
+    },
+    {
       "id": "blur",
       "name": "BlurAction",
       "symbol": "◐",
@@ -72,7 +95,12 @@
         "size": "130MB",
         "sha256": "4926c14127b1c3ee07e829654c89f0a28301f541bfaa97e6d5fc247c39d89ec4"
       },
-      "mac": null
+      "mac": {
+        "version": "1.0.0",
+        "size": "42MB",
+        "sha256": "742a35756ea9d650e5028d2ed7a76342993ab43e6e5cd516550913953ab86d56",
+        "start": "압축을 풀어 나온 Classpage 자리청소 앱을 응용 프로그램 폴더로 옮긴 뒤 실행 (Apple Silicon, macOS 14 이상)"
+      }
     },
     {
       "id": "galpee",
