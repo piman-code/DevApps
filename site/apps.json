@@ -40,7 +40,12 @@
       ],
       "requirements": "NEIS 학생답 정오표·문항정보표 엑셀. HWP 시험지를 읽으려면 Node.js와 kordoc이 필요합니다(HWPX·PDF는 없어도 됨).",
       "start": "Goedu-Split 실행 → 입력 데이터에서 정오표·문항정보표 선택 → 분석 실행",
-      "windows": null,
+      "windows": {
+        "version": "1.0.17",
+        "size": "154MB",
+        "sha256": "4fac2dc43525fd34c54f349bee78b862951a37e56f97bdf00ed415a309aca412",
+        "start": "Goedu-Split-1.0.17-windows-setup.exe를 실행해 안내대로 설치한 뒤 시작 메뉴에서 Goedu-Split 실행"
+      },
       "mac": {
         "version": "1.0.17",
         "size": "189MB",
