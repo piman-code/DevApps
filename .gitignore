@@ -1,0 +1,11 @@
+# 비밀 정보 — 절대 저장소에 올리지 않기
+다운로드_비밀키.txt
+links.json
+.dev.vars
+.env*
+
+# 로컬 전용
+.wrangler/
+node_modules/
+.claude/settings.local.json
+.DS_Store

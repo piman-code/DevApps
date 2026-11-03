@@ -2,9 +2,7 @@
   "site": {
     "title": "파이맨의 DevApps",
     "tagline": "교실에서 직접 쓰려고 만든 앱들을 선생님들과 나눕니다.",
-    "folder": "https://drive.google.com/drive/folders/1CKSwoHRmsXh7Q8bjBqKvthzL1barsNB1?usp=sharing",
-    "checksums": "https://drive.google.com/file/d/1-fD3_nvgOMSteag8LKkHcNX1rQtnye8f/view?usp=sharing",
-    "updated": "2026-11-03"
+    "updated": "2026-11-04"
   },
   "apps": [
     {
@@ -21,7 +19,11 @@
       ],
       "requirements": "유료 ChatGPT 또는 Claude 구독(AI 기능 사용 시). Claude 연결은 Claude Code를 따로 설치해야 합니다.",
       "start": "start-pyeonggaitda.bat 더블클릭",
-      "windows": { "version": "v2", "size": "202MB", "url": "https://drive.google.com/file/d/1xzBSRDGEVbElf5OvTsi5sgMDnwU39sCj/view?usp=sharing" },
+      "windows": {
+        "version": "v2",
+        "size": "202MB",
+        "sha256": "5130f9eb9d4d4b454fea399117b18cd61f596421a53feebe23554637d112e068"
+      },
       "mac": null
     },
     {
@@ -38,8 +40,17 @@
       ],
       "requirements": "설치 없이 압축만 풀어 실행",
       "start": "BlurAction 폴더의 BlurAction.exe 실행",
-      "windows": { "version": "0.9.1", "size": "131MB", "url": "https://drive.google.com/file/d/1HZAHxLczS859tCGxXncZixlqe6mR24-_/view?usp=sharing" },
-      "mac": null,
+      "windows": {
+        "version": "0.9.1",
+        "size": "131MB",
+        "sha256": "baddd62d8862201bfaf436d45f4dffc6c839f020df8a0b216b493d1579bc61b8"
+      },
+      "mac": {
+        "version": "0.9.6",
+        "size": "3.6MB",
+        "sha256": "420afae3fd32fd4a67e9a82f45feaa7dcf68306e0d00cfd636463a8bb7d8d6eb",
+        "start": "압축을 풀어 나온 BlurAction 앱을 응용 프로그램 폴더로 옮긴 뒤 실행 (Apple Silicon, macOS 14 이상)"
+      },
       "source": null
     },
     {
@@ -56,7 +67,11 @@
       ],
       "requirements": "별점 자료(star-ledger.json)와 학급 명렬표(.md) 파일이 필요합니다.",
       "start": "Classpage-Windows.exe 실행",
-      "windows": { "version": "1.0", "size": "130MB", "url": "https://drive.google.com/file/d/16CrKpbHrDUgUUVrjj6KWy1frcsSG9PRn/view?usp=sharing" },
+      "windows": {
+        "version": "1.0",
+        "size": "130MB",
+        "sha256": "4926c14127b1c3ee07e829654c89f0a28301f541bfaa97e6d5fc247c39d89ec4"
+      },
       "mac": null
     },
     {
@@ -73,7 +88,11 @@
       ],
       "requirements": "Microsoft Edge WebView2 Runtime, .NET Framework 4.6.2 이상(대부분의 Windows 10/11에 이미 있음)",
       "start": "Galpee 폴더의 Galpee.exe 실행",
-      "windows": { "version": "1.3.0", "size": "25MB", "url": "https://drive.google.com/file/d/1D2uw6yZ5N68CYcSkssN8CBFax5Guh6kv/view?usp=sharing" },
+      "windows": {
+        "version": "1.3.0",
+        "size": "25MB",
+        "sha256": "fbf3af5f4de563344dc8ea58b18159395d1868299c3263a39e7077acee21f60d"
+      },
       "mac": null
     },
     {
@@ -90,7 +109,11 @@
       ],
       "requirements": "교사 PC와 학생 휴대폰이 같은 와이파이에 있어야 합니다. 처음 실행할 때 방화벽 창이 뜨면 '허용'을 누르세요.",
       "start": "수업시작.bat 더블클릭",
-      "windows": { "version": "1.0", "size": "34MB", "url": "https://drive.google.com/file/d/1IpM6C5oqdg1wajfUYMhOt9WQLsa8honC/view?usp=sharing" },
+      "windows": {
+        "version": "1.0",
+        "size": "34MB",
+        "sha256": "4258c893e08799c280d00c584bfbc3be26bc211fd4ec79c36a872a6caeaf3c52"
+      },
       "mac": null
     }
   ]
