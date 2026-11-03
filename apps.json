@@ -1,0 +1,97 @@
+{
+  "site": {
+    "title": "파이맨의 DevApps",
+    "tagline": "교실에서 직접 쓰려고 만든 앱들을 선생님들과 나눕니다.",
+    "folder": "https://drive.google.com/drive/folders/1CKSwoHRmsXh7Q8bjBqKvthzL1barsNB1?usp=sharing",
+    "checksums": "https://drive.google.com/file/d/1-fD3_nvgOMSteag8LKkHcNX1rQtnye8f/view?usp=sharing",
+    "updated": "2026-11-03"
+  },
+  "apps": [
+    {
+      "id": "pyeonggaitda",
+      "name": "평가잇다",
+      "symbol": "✓",
+      "color": "#2f6fde",
+      "category": "평가",
+      "summary": "학교 평가계획을 불러와 채점기준표를 함께 만드는 도우미",
+      "features": [
+        "학교알리미에서 공시된 평가계획을 바로 가져오기",
+        "PDF·HWP·HWPX·이미지 자료 등록",
+        "AI 제안은 선생님이 확인한 뒤에만 반영"
+      ],
+      "requirements": "유료 ChatGPT 또는 Claude 구독(AI 기능 사용 시). Claude 연결은 Claude Code를 따로 설치해야 합니다.",
+      "start": "start-pyeonggaitda.bat 더블클릭",
+      "windows": { "version": "v2", "size": "202MB", "url": "https://drive.google.com/file/d/1xzBSRDGEVbElf5OvTsi5sgMDnwU39sCj/view?usp=sharing" },
+      "mac": null
+    },
+    {
+      "id": "blur",
+      "name": "BlurAction",
+      "symbol": "◐",
+      "color": "#7a4fd6",
+      "category": "개인정보",
+      "summary": "사진·PDF·영상 속 얼굴과 글자를 찾아 가리는 프로그램",
+      "features": [
+        "얼굴·글자 자동 찾기와 영상 속 대상 추적",
+        "블러·모자이크·단색 가리기, 실행취소 지원",
+        "아이폰 HEIC 사진, MP4·MOV·MKV 영상 지원"
+      ],
+      "requirements": "설치 없이 압축만 풀어 실행",
+      "start": "BlurAction 폴더의 BlurAction.exe 실행",
+      "windows": { "version": "0.9.1", "size": "131MB", "url": "https://drive.google.com/file/d/1HZAHxLczS859tCGxXncZixlqe6mR24-_/view?usp=sharing" },
+      "mac": null,
+      "source": null
+    },
+    {
+      "id": "classpage",
+      "name": "Classpage",
+      "symbol": "▦",
+      "color": "#14946b",
+      "category": "학급운영",
+      "summary": "별점에 따라 자리를 배치하고 청소 당번을 정하는 학급 도구",
+      "features": [
+        "기간별 별점 순서로 자리 고르기",
+        "도우미·고정자리·청소 면제 등 조건 설정",
+        "자리표·청소표를 A4로 바로 인쇄"
+      ],
+      "requirements": "별점 자료(star-ledger.json)와 학급 명렬표(.md) 파일이 필요합니다.",
+      "start": "Classpage-Windows.exe 실행",
+      "windows": { "version": "1.0", "size": "130MB", "url": "https://drive.google.com/file/d/16CrKpbHrDUgUUVrjj6KWy1frcsSG9PRn/view?usp=sharing" },
+      "mac": null
+    },
+    {
+      "id": "galpee",
+      "name": "갈피",
+      "symbol": "❏",
+      "color": "#d9822b",
+      "category": "업무",
+      "summary": "쌓인 파일을 끌어다 놓아 정해 둔 폴더로 정리하는 도구",
+      "features": [
+        "목적지 폴더 1~5개를 정하고 끌어다 놓아 배정",
+        "PDF·HWP·HWPX 내용을 미리 보며 정리",
+        "Ctrl+Z로 이동 되돌리기, 삭제는 휴지통으로"
+      ],
+      "requirements": "Microsoft Edge WebView2 Runtime, .NET Framework 4.6.2 이상(대부분의 Windows 10/11에 이미 있음)",
+      "start": "Galpee 폴더의 Galpee.exe 실행",
+      "windows": { "version": "1.3.0", "size": "25MB", "url": "https://drive.google.com/file/d/1D2uw6yZ5N68CYcSkssN8CBFax5Guh6kv/view?usp=sharing" },
+      "mac": null
+    },
+    {
+      "id": "monster",
+      "name": "몬스터배틀",
+      "symbol": "★",
+      "color": "#d64560",
+      "category": "수업",
+      "summary": "학생들이 휴대폰으로 참여하는 실시간 게임형 수업 활동",
+      "features": [
+        "QR로 접속해 번호·이름만 입력하면 참여",
+        "정답을 맞히면 경험치를 얻고 반 전체가 보스와 대결",
+        "공통수학2·미적분Ⅰ 활동, '내 문항'으로 어떤 과목이든"
+      ],
+      "requirements": "교사 PC와 학생 휴대폰이 같은 와이파이에 있어야 합니다. 처음 실행할 때 방화벽 창이 뜨면 '허용'을 누르세요.",
+      "start": "수업시작.bat 더블클릭",
+      "windows": { "version": "1.0", "size": "34MB", "url": "https://drive.google.com/file/d/1IpM6C5oqdg1wajfUYMhOt9WQLsa8honC/view?usp=sharing" },
+      "mac": null
+    }
+  ]
+}

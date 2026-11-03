@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>파이맨의 DevApps</title>
+<meta name="description" content="교실에서 직접 쓰려고 만든 앱들을 선생님들과 나눕니다.">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+:root{
+  --bg:#f6f5f2; --surface:#ffffff; --surface-2:#f0eee9; --text:#1d1c1a; --muted:#6b6862;
+  --line:#e3e0d9; --accent:#1d1c1a; --accent-text:#ffffff; --shadow:0 1px 2px rgba(0,0,0,.04),0 8px 24px rgba(0,0,0,.05);
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#141413; --surface:#1d1d1b; --surface-2:#262624; --text:#f0eee9; --muted:#a29f98;
+    --line:#33322f; --accent:#f0eee9; --accent-text:#141413; --shadow:none;}
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--text);font-family:"Pretendard Variable",Pretendard,-apple-system,"Malgun Gothic",sans-serif;line-height:1.6;word-break:keep-all}
+a{color:inherit}
+.wrap{max-width:1080px;margin:0 auto;padding:0 20px}
+header{padding:64px 0 28px}
+.brand{font-size:13px;font-weight:600;letter-spacing:.08em;color:var(--muted);text-transform:uppercase}
+h1{font-size:clamp(30px,5vw,44px);line-height:1.2;margin:10px 0 12px;letter-spacing:-.02em}
+.tagline{color:var(--muted);font-size:17px;margin:0}
+.bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin:32px 0 20px}
+.seg{display:inline-flex;background:var(--surface-2);border-radius:999px;padding:4px}
+.seg button{border:0;background:none;color:var(--muted);font:inherit;font-weight:600;font-size:14px;padding:8px 18px;border-radius:999px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.meta{font-size:13px;color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:16px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:22px;display:flex;flex-direction:column;box-shadow:var(--shadow)}
+.head{display:flex;gap:14px;align-items:center}
+.tile{width:52px;height:52px;flex:none;border-radius:14px;display:grid;place-items:center;color:#fff;font-size:24px;font-weight:700}
+.name{font-size:20px;font-weight:700;margin:0;letter-spacing:-.01em}
+.chip{display:inline-block;font-size:12px;font-weight:600;color:var(--muted);background:var(--surface-2);border-radius:6px;padding:1px 8px;margin-top:2px}
+.summary{margin:16px 0 10px;font-size:15px}
+.features{margin:0 0 14px;padding:0;list-style:none;font-size:14px;color:var(--muted)}
+.features li{padding-left:16px;position:relative;margin:3px 0}
+.features li::before{content:"";position:absolute;left:2px;top:.72em;width:5px;height:5px;border-radius:50%;background:currentColor;opacity:.6}
+details{font-size:13.5px;color:var(--muted);border-top:1px solid var(--line);padding-top:10px;margin-bottom:16px}
+summary{cursor:pointer;font-weight:600;color:var(--text);list-style:none}
+summary::-webkit-details-marker{display:none}
+summary::after{content:" +";color:var(--muted)}
+details[open] summary::after{content:" −"}
+dl{margin:8px 0 0}
+dt{font-weight:600;color:var(--text);margin-top:6px}
+dd{margin:0}
+.spacer{flex:1}
+.dl{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:8px;text-decoration:none;background:var(--accent);color:var(--accent-text);font-weight:700;font-size:15px;padding:11px 18px;border-radius:12px}
+.btn:hover{opacity:.88}
+.btn.off{background:var(--surface-2);color:var(--muted);pointer-events:none}
+.ver{font-size:13px;color:var(--muted)}
+section.guide{margin:56px 0 0}
+h2{font-size:22px;margin:0 0 16px;letter-spacing:-.01em}
+.steps{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;counter-reset:s}
+.step{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;font-size:14px}
+.step b{display:block;font-size:15px;margin-bottom:4px}
+.step b::before{counter-increment:s;content:counter(s) ". ";color:var(--muted)}
+.step p{margin:0;color:var(--muted)}
+.note{margin-top:16px;background:var(--surface-2);border-radius:14px;padding:16px 18px;font-size:14px;color:var(--muted)}
+.note strong{color:var(--text)}
+footer{margin:64px 0 40px;font-size:13px;color:var(--muted);display:flex;flex-wrap:wrap;gap:8px 20px;justify-content:space-between}
+.error{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px}
+@media (max-width:480px){header{padding-top:40px}.wrap{padding:0 16px}.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">DevApps</div>
+    <h1 id="title">파이맨의 DevApps</h1>
+    <p class="tagline" id="tagline"></p>
+  </header>
+
+  <div class="bar">
+    <div class="seg" role="group" aria-label="운영체제 선택">
+      <button type="button" data-os="windows" aria-pressed="true">Windows</button>
+      <button type="button" data-os="mac" aria-pressed="false">Mac</button>
+    </div>
+    <div class="meta" id="meta"></div>
+  </div>
+
+  <main class="grid" id="apps"></main>
+
+  <section class="guide">
+    <h2>처음 받으실 때</h2>
+    <div class="steps">
+      <div class="step"><b>내려받기</b><p>다운로드를 누르면 구글 드라이브가 열립니다. 오른쪽 위 ⤓ 버튼을 누르세요. 100MB가 넘는 파일은 "바이러스 검사를 할 수 없습니다" 안내가 나오는데, <em>무시하고 다운로드</em>를 누르면 됩니다.</p></div>
+      <div class="step"><b>압축 풀기</b><p>zip 파일을 마우스 오른쪽 버튼으로 눌러 <em>모두 압축 풀기</em>를 선택하세요. 압축을 푼 폴더 전체를 함께 두어야 실행됩니다.</p></div>
+      <div class="step"><b>처음 실행</b><p>"Windows의 PC 보호" 창이 뜨면 <em>추가 정보 → 실행</em>을 누르세요. 개인이 만든 앱이라 처음 한 번 나오는 안내입니다.</p></div>
+      <div class="step"><b>Mac에서</b><p>Mac 버전은 준비 중입니다. 나오면 앱을 오른쪽 버튼으로 눌러 <em>열기</em>를 선택해 실행하세요.</p></div>
+    </div>
+    <div class="note"><strong>개인정보 안내</strong> · 모든 앱은 선생님 PC 안에서만 자료를 다룹니다. 배포 파일에는 학생 명단이나 개인 자료가 들어 있지 않습니다. 평가잇다의 AI 기능에는 개인정보를 가린 자료만 넣어 주세요.</div>
+  </section>
+
+  <footer>
+    <span>© 2026 파이맨. 학교 안에서 자유롭게 쓰세요.</span>
+    <span id="links"></span>
+  </footer>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let data, os = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent) ? 'mac' : 'windows';
+
+function render() {
+  document.querySelectorAll('.seg button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.os === os)));
+  const label = os === 'mac' ? 'Mac' : 'Windows';
+  $('#apps').innerHTML = data.apps.map(a => {
+    const build = a[os];
+    const button = build
+      ? `<a class="btn" href="${esc(build.url)}" target="_blank" rel="noopener">${label}용 다운로드</a><span class="ver">v${esc(build.version).replace(/^v/, '')} · ${esc(build.size)}</span>`
+      : `<span class="btn off">${label} 버전 준비 중</span>`;
+    return `<article class="card">
+      <div class="head">
+        <div class="tile" style="background:${esc(a.color)}" aria-hidden="true">${esc(a.symbol)}</div>
+        <div><h3 class="name">${esc(a.name)}</h3><span class="chip">${esc(a.category)}</span></div>
+      </div>
+      <p class="summary">${esc(a.summary)}</p>
+      <ul class="features">${a.features.map(f => `<li>${esc(f)}</li>`).join('')}</ul>
+      <div class="spacer"></div>
+      <details><summary>필요한 것 · 실행 방법</summary><dl>
+        <dt>필요한 것</dt><dd>${esc(a.requirements)}</dd>
+        <dt>실행</dt><dd>${esc(a.start)}</dd>
+      </dl></details>
+      <div class="dl">${button}</div>
+    </article>`;
+  }).join('');
+}
+
+fetch('apps.json', {cache: 'no-cache'}).then(r => r.json()).then(json => {
+  data = json;
+  document.title = json.site.title;
+  $('#title').textContent = json.site.title;
+  $('#tagline').textContent = json.site.tagline;
+  $('#meta').textContent = `앱 ${json.apps.length}개 · ${json.site.updated} 업데이트`;
+  $('#links').innerHTML = `<a href="${esc(json.site.folder)}" target="_blank" rel="noopener">전체 파일 폴더</a> · <a href="${esc(json.site.checksums)}" target="_blank" rel="noopener">파일 확인값(SHA256)</a>`;
+  render();
+}).catch(() => {
+  $('#apps').innerHTML = '<div class="error">앱 목록을 불러오지 못했습니다. 잠시 후 새로고침해 주세요.</div>';
+});
+
+document.querySelectorAll('.seg button').forEach(b => b.addEventListener('click', () => { os = b.dataset.os; render(); }));
+</script>
+</body>
+</html>
