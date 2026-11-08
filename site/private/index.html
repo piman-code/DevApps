@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>파이맨 전용 · DevApps</title>
+<link rel="icon" href="/icon.svg?v=2" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png?v=2">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+:root{
+  --bg:#f6f5f2; --surface:#ffffff; --surface-2:#f0eee9; --text:#1d1c1a; --muted:#6b6862;
+  --line:#e3e0d9; --accent:#1d1c1a; --accent-text:#ffffff; --mark:#b4532a; --shadow:0 1px 2px rgba(0,0,0,.04),0 8px 24px rgba(0,0,0,.05);
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#141413; --surface:#1d1d1b; --surface-2:#262624; --text:#f0eee9; --muted:#a29f98;
+    --line:#33322f; --accent:#f0eee9; --accent-text:#141413; --mark:#e8926b; --shadow:none;}
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:"Pretendard Variable",Pretendard,-apple-system,"Malgun Gothic",sans-serif;line-height:1.6;word-break:keep-all}
+a{color:inherit}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--text);outline-offset:2px}
+.wrap{max-width:900px;margin:0 auto;padding:0 20px 48px}
+.top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 14px;padding:22px 0 0}
+.brand{font-size:13px;font-weight:700;letter-spacing:.08em;color:var(--muted);text-transform:uppercase;text-decoration:none}
+.brand b{color:var(--mark)}
+.seg{display:inline-flex;background:var(--surface-2);border-radius:999px;padding:4px}
+.seg button{border:0;background:none;color:var(--muted);font-weight:600;font-size:14px;padding:8px 16px;border-radius:999px}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+
+.stage{margin-top:18px}
+.scene{display:none}
+.scene.on{display:block}
+@media (prefers-reduced-motion:no-preference){.mode-present .scene.on{animation:in .3s ease both}}
+@keyframes in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.scene-head{margin:8px 0 20px}
+.scene h2{font-size:clamp(24px,4vw,32px);line-height:1.25;margin:0;letter-spacing:-.02em}
+.scene h1:focus,.scene h2:focus{outline:none}
+.scene .sub{color:var(--muted);font-size:15px;margin:6px 0 0}
+.mode-read .scene,.mode-print .scene{display:block;margin-top:40px}
+.mode-read .scene:first-child,.mode-print .scene:first-child{margin-top:0}
+
+#cover{padding:clamp(28px,6vw,72px) 0 8px}
+#cover .kicker{font-size:13px;font-weight:700;letter-spacing:.14em;color:var(--mark);text-transform:uppercase;margin:0}
+#cover h1{font-size:clamp(34px,6vw,54px);line-height:1.15;margin:12px 0 14px;letter-spacing:-.025em}
+#cover .tagline{color:var(--muted);font-size:clamp(16px,2.2vw,19px);margin:0;max-width:600px}
+.cta{display:inline-flex;align-items:center;gap:8px;margin-top:32px;background:var(--accent);color:var(--accent-text);font-weight:700;font-size:16px;padding:13px 22px;border-radius:14px;border:0}
+.cta:hover{opacity:.88}
+.mode-read .cta,.mode-print .cta{display:none}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:22px;display:flex;flex-direction:column;gap:10px;box-shadow:var(--shadow);text-decoration:none}
+a.card:hover{border-color:var(--text)}
+.card .k{font-size:12px;font-weight:700;letter-spacing:.08em;color:var(--mark);text-transform:uppercase}
+.card h3{font-size:20px;margin:0;letter-spacing:-.01em}
+.card p{margin:0;color:var(--muted);font-size:14.5px}
+.card .go{margin-top:auto;font-weight:700;font-size:14px}
+.card.empty{border-style:dashed;box-shadow:none;background:transparent}
+.card.empty h3{color:var(--muted);font-weight:600}
+
+.block{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:22px;margin-top:14px;box-shadow:var(--shadow)}
+.block h3{margin:0 0 6px;font-size:17px;display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.block p{margin:0;color:var(--muted);font-size:14.5px}
+.block .row{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:12px}
+.sha{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:14px;font-weight:700;background:var(--surface-2);padding:3px 10px;border-radius:8px}
+.sm{border:1px solid var(--line);background:transparent;color:var(--text);border-radius:10px;padding:7px 12px;font-size:13px;font-weight:600}
+.sm:hover{border-color:var(--text)}
+.state{font-weight:700}
+.state.on{color:#1f8a70}
+.state.off{color:var(--mark)}
+pre{margin:12px 0 0;background:var(--surface-2);border-radius:12px;padding:14px 16px;font-size:12.5px;line-height:1.5;overflow:auto;font-family:ui-monospace,Menlo,Consolas,monospace;white-space:pre-wrap;word-break:break-all}
+.block .links{display:flex;flex-wrap:wrap;gap:8px 20px;font-size:14px;margin-top:10px}
+.relock{margin-top:24px;border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:12px;padding:10px 16px;font-weight:600;font-size:14px}
+.relock:hover{color:var(--text);border-color:var(--text)}
+
+.nav{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:28px;padding-top:18px;border-top:1px solid var(--line)}
+.nav button{border:1px solid var(--line);background:var(--surface);color:var(--text);border-radius:12px;padding:9px 16px;font-weight:600;font-size:14px}
+.nav button:disabled{opacity:.4;cursor:default}
+.dots{display:flex;gap:8px;align-items:center}
+.dots button{width:10px;height:10px;padding:0;border-radius:50%;border:0;background:var(--line)}
+.dots button[aria-current="true"]{background:var(--text);transform:scale(1.2)}
+.nav .where{font-size:13px;color:var(--muted);white-space:nowrap}
+.mode-read .nav,.mode-print .nav{display:none}
+@media (max-width:480px){.wrap{padding:0 16px 40px}.grid{grid-template-columns:1fr}}
+.mode-print .top .seg{display:none}
+@media print{
+  body{background:#fff;color:#111}
+  .top,.nav,.cta,.relock,.sm{display:none!important}
+  .scene{display:block!important;animation:none;margin-top:24px;break-inside:avoid}
+  .card,.block{background:#fff;border-color:#ccc;box-shadow:none}
+}
+</style>
+</head>
+<body class="mode-present">
+<div class="wrap">
+  <header class="top">
+    <a class="brand" href="/private/"><b>π</b> 파이맨 전용</a>
+    <div class="seg" role="group" aria-label="보기 모드">
+      <button type="button" data-mode="present" aria-pressed="true">발표</button>
+      <button type="button" data-mode="read" aria-pressed="false">읽기</button>
+      <button type="button" data-mode="print" aria-pressed="false">인쇄</button>
+    </div>
+  </header>
+
+  <main class="stage">
+    <!-- 장면 1: 표지 -->
+    <section class="scene on" id="cover" aria-label="표지">
+      <p class="kicker">관리자만 · 목록은 공개되지 않음</p>
+      <h1>파이맨 전용</h1>
+      <p class="tagline">본인만 쓰는 도구와 DevApps 운영 화면입니다. 이 주소는 공개 페이지 어디에도 적혀 있지 않습니다.</p>
+      <button type="button" class="cta" data-go="tools">도구 보기 →</button>
+    </section>
+
+    <!-- 장면 2: 나만 쓰는 도구 -->
+    <section class="scene" id="tools" aria-label="나만 쓰는 도구">
+      <div class="scene-head"><h2>나만 쓰는 도구</h2><p class="sub">공개 통계 기반이라도 일상적으로 본인이 여는 것은 여기에 둡니다.</p></div>
+      <div class="grid">
+        <a class="card" href="/private/house-price-map">
+          <span class="k">지도 · 매일 여는 도구</span>
+          <h3>전국 집값 지도</h3>
+          <p>전국 시군구 256곳의 아파트 매매 실거래 평균가격(㎡당). 국토교통부 실거래가 2026년 7~9월 108,342건을 직접 집계했습니다.</p>
+          <span class="go">열기 →</span>
+        </a>
+        <div class="card empty">
+          <span class="k">다음 자리</span>
+          <h3>도구를 더 넣을 자리</h3>
+          <p>새 도구는 <code>site/private/</code>에 HTML을 넣고 이 목록에 카드 하나를 추가합니다.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 장면 3: 관리 -->
+    <section class="scene" id="admin" aria-label="관리">
+      <div class="scene-head"><h2>관리</h2><p class="sub">공개용 DevApps의 잠금 상태와 배포를 확인합니다. 비밀키 값 자체는 Cloudflare에만 있어 여기서 보이지 않습니다.</p></div>
+
+      <div class="block">
+        <h3>배포 확인 <span class="sha" id="sha">확인 중…</span> <button type="button" class="sm" id="recheck">다시 확인</button></h3>
+        <p>지금 사이트에 올라간 커밋입니다. 맥에서 <code>npx wrangler pages deploy</code>로 올립니다.</p>
+        <div class="links">
+          <a href="/build.txt" target="_blank" rel="noopener">/build.txt</a>
+          <a href="https://github.com/piman-code/DevApps/commits/main" target="_blank" rel="noopener">GitHub 커밋 기록 ↗</a>
+          <a href="https://dash.cloudflare.com/" target="_blank" rel="noopener">Cloudflare 대시보드 ↗</a>
+        </div>
+      </div>
+
+      <div class="block">
+        <h3>공개용 다운로드 잠금 <span class="state" id="dlstate">확인 중…</span></h3>
+        <p>이 브라우저에서 다운로드 비밀키가 열려 있는지 보여 줍니다. 선생님 입장에서 시험해 보려면 잠근 뒤 공개 페이지에서 다시 넣어 보세요.</p>
+        <div class="row">
+          <button type="button" class="sm" id="dllock">이 브라우저에서 다운로드 잠그기</button>
+          <a class="sm" href="/#apps" style="text-decoration:none">공개 페이지 앱 목록 열기</a>
+        </div>
+      </div>
+
+      <div class="block">
+        <h3>비밀키 바꾸기</h3>
+        <p>키는 Cloudflare 비밀 변수에만 있습니다. 바꾸면 기존 쿠키는 자동으로 무효가 됩니다. 다운로드 키를 바꾸면 선생님들께 새 키를 안내해야 합니다.</p>
+        <pre># 공개용 다운로드 키
+npx wrangler pages secret put DOWNLOAD_KEY --project-name piman-devapps
+
+# 이 전용 영역의 관리자 키
+npx wrangler pages secret put ADMIN_KEY --project-name piman-devapps</pre>
+      </div>
+
+      <button type="button" class="relock" id="relock">이 기기에서 파이맨 전용 잠그기</button>
+    </section>
+  </main>
+
+  <nav class="nav" aria-label="장면 이동">
+    <button type="button" id="prev">← 이전</button>
+    <div class="dots" id="dots"></div>
+    <span class="where" id="where"></span>
+    <button type="button" id="next">다음 →</button>
+  </nav>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const SCENES = ['cover', 'tools', 'admin'];
+const NAMES = {cover: '표지', tools: '나만 쓰는 도구', admin: '관리'};
+let current = 'cover';
+const dots = $('#dots');
+SCENES.forEach(id => { const d = document.createElement('button'); d.type = 'button'; d.setAttribute('aria-label', NAMES[id]); d.dataset.go = id; dots.appendChild(d); });
+function go(id, keepUrl) {
+  if (!SCENES.includes(id)) id = 'cover';
+  current = id;
+  const i = SCENES.indexOf(id);
+  SCENES.forEach(s => document.getElementById(s).classList.toggle('on', s === id));
+  dots.querySelectorAll('button').forEach((d, k) => d.setAttribute('aria-current', String(k === i)));
+  $('#prev').disabled = i === 0; $('#next').disabled = i === SCENES.length - 1;
+  $('#where').textContent = `${i + 1} / ${SCENES.length} · ${NAMES[id]}`;
+  if (!keepUrl) { try { history.replaceState(null, '', id === 'cover' ? location.pathname : location.pathname + '#' + id); } catch {} }
+  if (document.body.classList.contains('mode-present')) {
+    window.scrollTo(0, 0);
+    const h = document.querySelector('#' + id + ' h2, #' + id + ' h1'); if (h) { h.setAttribute('tabindex', '-1'); h.focus({preventScroll: true}); }
+  } else if (id !== 'cover') document.getElementById(id).scrollIntoView({block: 'start'});
+}
+$('#prev').addEventListener('click', () => go(SCENES[SCENES.indexOf(current) - 1]));
+$('#next').addEventListener('click', () => go(SCENES[SCENES.indexOf(current) + 1]));
+document.addEventListener('click', e => { const b = e.target.closest('[data-go]'); if (b) go(b.dataset.go); });
+document.addEventListener('keydown', e => {
+  if (!document.body.classList.contains('mode-present') || e.target.closest('input')) return;
+  if (e.key === 'ArrowRight') { e.preventDefault(); $('#next').click(); }
+  if (e.key === 'ArrowLeft') { e.preventDefault(); $('#prev').click(); }
+  if (e.key === 'Escape') go('cover');
+});
+window.addEventListener('hashchange', () => go(location.hash.slice(1) || 'cover', true));
+
+const modeSeg = document.querySelector('.top .seg');
+function setMode(m, silent) {
+  if (!['present', 'read', 'print'].includes(m)) m = 'present';
+  document.body.className = 'mode-' + m;
+  modeSeg.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.mode === m)));
+  try { localStorage.setItem('devapps-private-mode', m === 'print' ? 'read' : m); } catch {}
+  if (m === 'present') go(current, true);
+  if (m === 'print' && !silent) setTimeout(() => window.print(), 150);
+}
+modeSeg.addEventListener('click', e => { const b = e.target.closest('button'); if (b) setMode(b.dataset.mode); });
+window.addEventListener('afterprint', () => { if (document.body.classList.contains('mode-print')) setMode('read', true); });
+(function () {
+  let saved = null; try { saved = localStorage.getItem('devapps-private-mode'); } catch {}
+  setMode(saved === 'read' ? 'read' : 'present', true);
+  go(location.hash.slice(1) || 'cover', true);
+})();
+
+// ── 관리 장면 ──
+function checkBuild() {
+  $('#sha').textContent = '확인 중…';
+  fetch('/build.txt?t=' + Date.now(), {cache: 'no-store'}).then(r => r.ok ? r.text() : '').then(t => {
+    t = t.trim(); $('#sha').textContent = t ? t.slice(0, 7) : '확인 못 함'; $('#sha').title = t;
+  }).catch(() => { $('#sha').textContent = '확인 못 함'; });
+}
+$('#recheck').addEventListener('click', checkBuild);
+checkBuild();
+
+function dlState() {
+  fetch('/api/unlock', {cache: 'no-store', credentials: 'same-origin'}).then(r => r.json()).then(j => {
+    const s = $('#dlstate'); s.textContent = j.ok ? '열림' : '잠김'; s.className = 'state ' + (j.ok ? 'on' : 'off');
+  }).catch(() => { $('#dlstate').textContent = '확인 못 함'; });
+}
+$('#dllock').addEventListener('click', () => fetch('/api/unlock', {method: 'DELETE', credentials: 'same-origin'}).finally(dlState));
+dlState();
+
+$('#relock').addEventListener('click', () => {
+  fetch('/api/admin', {method: 'DELETE', credentials: 'same-origin'}).finally(() => location.reload());
+});
+</script>
+</body>
+</html>

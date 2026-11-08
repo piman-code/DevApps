@@ -26,15 +26,43 @@
 html{-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--bg);color:var(--text);font-family:"Pretendard Variable",Pretendard,-apple-system,"Malgun Gothic",sans-serif;line-height:1.6;word-break:keep-all}
 a{color:inherit}
-.wrap{max-width:1080px;margin:0 auto;padding:0 20px}
-header{padding:64px 0 28px}
-.brand{font-size:13px;font-weight:600;letter-spacing:.08em;color:var(--muted);text-transform:uppercase}
-h1{font-size:clamp(30px,5vw,44px);line-height:1.2;margin:10px 0 12px;letter-spacing:-.02em}
-.tagline{color:var(--muted);font-size:17px;margin:0}
-.bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin:32px 0 20px}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--text);outline-offset:2px}
+.wrap{max-width:1080px;margin:0 auto;padding:0 20px 48px}
+
+/* 상단 바: 사이트 이름 + 보기 모드 */
+.top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 14px;padding:22px 0 0}
+.brand{font-size:13px;font-weight:700;letter-spacing:.08em;color:var(--muted);text-transform:uppercase;text-decoration:none}
 .seg{display:inline-flex;background:var(--surface-2);border-radius:999px;padding:4px}
-.seg button{border:0;background:none;color:var(--muted);font:inherit;font-weight:600;font-size:14px;padding:8px 18px;border-radius:999px;cursor:pointer}
+.seg button{border:0;background:none;color:var(--muted);font-weight:600;font-size:14px;padding:8px 16px;border-radius:999px}
 .seg button[aria-pressed="true"]{background:var(--surface);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+
+/* 무대와 장면: 발표 모드에서는 장면 하나만 보인다 */
+.stage{margin-top:18px}
+.scene{display:none}
+.scene.on{display:block}
+@media (prefers-reduced-motion:no-preference){.mode-present .scene.on{animation:in .3s ease both}}
+@keyframes in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.scene-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px 24px;flex-wrap:wrap;margin:8px 0 20px}
+.scene h2{font-size:clamp(24px,4vw,32px);line-height:1.25;margin:0;letter-spacing:-.02em}
+.scene h1:focus,.scene h2:focus{outline:none}
+.scene .sub{color:var(--muted);font-size:15px;margin:6px 0 0}
+.mode-read .scene,.mode-print .scene{display:block;margin-top:40px}
+.mode-read .scene:first-child,.mode-print .scene:first-child{margin-top:0}
+
+/* 표지 */
+#cover{padding:clamp(28px,6vw,72px) 0 8px}
+#cover .kicker{font-size:13px;font-weight:700;letter-spacing:.14em;color:var(--muted);text-transform:uppercase;margin:0}
+#cover h1{font-size:clamp(34px,6vw,58px);line-height:1.15;margin:12px 0 14px;letter-spacing:-.025em}
+#cover .tagline{color:var(--muted);font-size:clamp(16px,2.2vw,19px);margin:0;max-width:560px}
+.facts{display:flex;flex-wrap:wrap;gap:10px 28px;margin:28px 0 0;padding:0;list-style:none;color:var(--muted);font-size:14px}
+.facts b{display:block;color:var(--text);font-size:22px;font-weight:700;letter-spacing:-.01em}
+.cta{display:inline-flex;align-items:center;gap:8px;margin-top:32px;background:var(--accent);color:var(--accent-text);font-weight:700;font-size:16px;padding:13px 22px;border-radius:14px;border:0}
+.cta:hover{opacity:.88}
+.mode-read .cta,.mode-print .cta{display:none}
+
+/* 앱 목록 */
+.bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin:0 0 18px}
 .meta{font-size:13px;color:var(--muted)}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:16px}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:22px;display:flex;flex-direction:column;box-shadow:var(--shadow)}
@@ -54,14 +82,18 @@ details[open] summary::after{content:" −"}
 dl{margin:8px 0 0}
 dt{font-weight:600;color:var(--text);margin-top:6px}
 dd{margin:0}
+dd.sha{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;overflow-wrap:anywhere}
 .spacer{flex:1}
 .dl{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
-.btn{display:inline-flex;align-items:center;gap:8px;text-decoration:none;background:var(--accent);color:var(--accent-text);font-weight:700;font-size:15px;padding:11px 18px;border-radius:12px}
+.btn{display:inline-flex;align-items:center;gap:8px;text-decoration:none;background:var(--accent);color:var(--accent-text);font-weight:700;font-size:15px;padding:11px 18px;border-radius:12px;border:0}
 .btn:hover{opacity:.88}
 .btn.off{background:var(--surface-2);color:var(--muted);pointer-events:none}
 .ver{font-size:13px;color:var(--muted)}
-section.guide{margin:56px 0 0}
-h2{font-size:22px;margin:0 0 16px;letter-spacing:-.01em}
+.error{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px}
+.lock{font-size:13px;color:var(--muted)}
+.lock button{border:0;background:none;color:inherit;font:inherit;text-decoration:underline;cursor:pointer;padding:0}
+
+/* 처음 받으실 때 */
 .steps{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;counter-reset:s}
 .step{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;font-size:14px}
 .step b{display:block;font-size:15px;margin-bottom:4px}
@@ -69,12 +101,24 @@ h2{font-size:22px;margin:0 0 16px;letter-spacing:-.01em}
 .step p{margin:0;color:var(--muted)}
 .note{margin-top:16px;background:var(--surface-2);border-radius:14px;padding:16px 18px;font-size:14px;color:var(--muted)}
 .note strong{color:var(--text)}
-footer{margin:64px 0 40px;font-size:13px;color:var(--muted);display:flex;flex-wrap:wrap;gap:8px 20px;justify-content:space-between}
-.error{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px}
-button.btn{border:0;font-family:inherit;cursor:pointer}
-dd.sha{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;overflow-wrap:anywhere}
-.lock{font-size:13px;color:var(--muted)}
-.lock button{border:0;background:none;color:inherit;font:inherit;text-decoration:underline;cursor:pointer;padding:0}
+
+/* 마무리 */
+#end .links{display:flex;flex-wrap:wrap;gap:8px 20px;font-size:14px;margin-top:8px}
+#end .copy{color:var(--muted);font-size:13px;margin-top:28px}
+
+/* 하단 이전·다음 */
+.nav{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:28px;padding-top:18px;border-top:1px solid var(--line)}
+.nav button{border:1px solid var(--line);background:var(--surface);color:var(--text);border-radius:12px;padding:9px 16px;font-weight:600;font-size:14px}
+.nav button:disabled{opacity:.4;cursor:default}
+.dots{display:flex;gap:8px;align-items:center}
+.dots button{width:10px;height:10px;padding:0;border-radius:50%;border:0;background:var(--line)}
+.dots button[aria-current="true"]{background:var(--text);transform:scale(1.2)}
+.nav .where{font-size:13px;color:var(--muted);min-width:0;white-space:nowrap}
+.mode-read .nav,.mode-print .nav{display:none}
+.hint{text-align:center;font-size:12.5px;color:var(--muted);margin-top:12px}
+.mode-read .hint,.mode-print .hint{display:none}
+
+/* 비밀키 상자 */
 dialog{border:1px solid var(--line);border-radius:18px;background:var(--surface);color:var(--text);padding:24px;width:min(400px,calc(100vw - 32px));box-shadow:var(--shadow)}
 dialog::backdrop{background:rgba(0,0,0,.4)}
 dialog h2{font-size:19px;margin:0 0 6px}
@@ -85,43 +129,89 @@ dialog .row{display:flex;gap:8px;justify-content:flex-end}
 dialog .row button{font:inherit;font-weight:700;font-size:15px;padding:10px 16px;border-radius:12px;border:0;cursor:pointer}
 dialog .cancel{background:var(--surface-2);color:var(--text)}
 dialog .ok{background:var(--accent);color:var(--accent-text)}
-@media (max-width:480px){header{padding-top:40px}.wrap{padding:0 16px}.grid{grid-template-columns:1fr}}
+
+@media (max-width:480px){.wrap{padding:0 16px 40px}.grid{grid-template-columns:1fr}.seg button{padding:7px 12px;font-size:13px}}
+
+/* 인쇄: 모든 장면을 정적으로, 버튼은 뺀다 */
+.mode-print .top .seg{display:none}
+@media print{
+  body{background:#fff;color:#111}
+  .top,.nav,.hint,.cta,.lock,.bar .seg{display:none!important}
+  .scene{display:block!important;animation:none;margin-top:24px;break-inside:avoid}
+  .card,.step{background:#fff;border-color:#ccc;box-shadow:none;break-inside:avoid}
+  .btn{background:#eee;color:#111}
+  details{display:block}details > *{display:block}
+}
 </style>
 </head>
-<body>
+<body class="mode-present">
 <div class="wrap">
-  <header>
-    <div class="brand">DevApps</div>
-    <h1 id="title">파이맨의 DevApps</h1>
-    <p class="tagline" id="tagline"></p>
+  <header class="top">
+    <a class="brand" href="/">π DevApps</a>
+    <div class="seg" role="group" aria-label="보기 모드">
+      <button type="button" data-mode="present" aria-pressed="true">발표</button>
+      <button type="button" data-mode="read" aria-pressed="false">읽기</button>
+      <button type="button" data-mode="print" aria-pressed="false">인쇄</button>
+    </div>
   </header>
 
-  <div class="bar">
-    <div class="seg" role="group" aria-label="운영체제 선택">
-      <button type="button" data-os="windows" aria-pressed="true">Windows</button>
-      <button type="button" data-os="mac" aria-pressed="false">Mac</button>
-    </div>
-    <div class="meta" id="meta"></div>
-  </div>
+  <main class="stage">
+    <!-- 장면 1: 표지 -->
+    <section class="scene on" id="cover" aria-label="표지">
+      <p class="kicker">파이맨의 DevApps</p>
+      <h1 id="title">파이맨의 DevApps</h1>
+      <p class="tagline" id="tagline"></p>
+      <ul class="facts" id="facts"></ul>
+      <button type="button" class="cta" data-go="apps">앱 보기 →</button>
+    </section>
 
-  <main class="grid" id="apps"></main>
+    <!-- 장면 2: 앱 목록 -->
+    <section class="scene" id="apps" aria-label="앱 목록">
+      <div class="scene-head">
+        <div><h2>앱 목록</h2><p class="sub">소개는 누구나 볼 수 있고, 다운로드는 비밀키를 아는 선생님만 받을 수 있습니다.</p></div>
+      </div>
+      <div class="bar">
+        <div class="seg" role="group" aria-label="운영체제 선택">
+          <button type="button" data-os="windows" aria-pressed="true">Windows</button>
+          <button type="button" data-os="mac" aria-pressed="false">Mac</button>
+        </div>
+        <div class="meta" id="meta"></div>
+      </div>
+      <div class="grid" id="applist"></div>
+    </section>
 
-  <section class="guide">
-    <h2>처음 받으실 때</h2>
-    <div class="steps">
-      <div class="step"><b>비밀키 넣기</b><p>다운로드는 비밀키를 아는 선생님만 받을 수 있습니다. 처음 한 번 넣으면 이 브라우저에서 30일 동안 다시 묻지 않습니다. 비밀키는 파이맨에게 문의해 주세요.</p></div>
-      <div class="step"><b>내려받기</b><p>다운로드를 누르면 구글 드라이브가 열립니다. 오른쪽 위 ⤓ 버튼을 누르세요. 100MB가 넘는 파일은 "바이러스 검사를 할 수 없습니다" 안내가 나오는데, <em>무시하고 다운로드</em>를 누르면 됩니다.</p></div>
-      <div class="step"><b>압축 풀기</b><p>zip 파일을 마우스 오른쪽 버튼으로 눌러 <em>모두 압축 풀기</em>를 선택하세요. 압축을 푼 폴더 전체를 함께 두어야 실행됩니다.</p></div>
-      <div class="step"><b>처음 실행</b><p>"Windows의 PC 보호" 창이 뜨면 <em>추가 정보 → 실행</em>을 누르세요. 개인이 만든 앱이라 처음 한 번 나오는 안내입니다.</p></div>
-      <div class="step"><b>Mac에서</b><p>zip을 더블클릭해 풀고, 나온 앱을 <em>응용 프로그램</em> 폴더로 옮기세요. 처음 열 때 "열 수 없음" 경고가 뜨면 <em>시스템 설정 → 개인정보 보호 및 보안</em> 아래쪽의 <em>그래도 열기</em>를 누르세요. Mac 버전은 Apple Silicon(M1 이후) 전용입니다.</p></div>
-    </div>
-    <div class="note"><strong>개인정보 안내</strong> · 모든 앱은 선생님 PC 안에서만 자료를 다룹니다. 배포 파일에는 학생 명단이나 개인 자료가 들어 있지 않습니다. 평가잇다의 AI 기능에는 개인정보를 가린 자료만 넣어 주세요.</div>
-  </section>
+    <!-- 장면 3: 처음 받으실 때 -->
+    <section class="scene" id="guide" aria-label="처음 받으실 때">
+      <div class="scene-head">
+        <div><h2>처음 받으실 때</h2><p class="sub">다운로드부터 첫 실행까지 다섯 단계입니다.</p></div>
+      </div>
+      <div class="steps">
+        <div class="step"><b>비밀키 넣기</b><p>다운로드는 비밀키를 아는 선생님만 받을 수 있습니다. 처음 한 번 넣으면 이 브라우저에서 30일 동안 다시 묻지 않습니다. 비밀키는 파이맨에게 문의해 주세요.</p></div>
+        <div class="step"><b>내려받기</b><p>다운로드를 누르면 구글 드라이브가 열립니다. 오른쪽 위 ⤓ 버튼을 누르세요. 100MB가 넘는 파일은 "바이러스 검사를 할 수 없습니다" 안내가 나오는데, <em>무시하고 다운로드</em>를 누르면 됩니다.</p></div>
+        <div class="step"><b>압축 풀기</b><p>zip 파일을 마우스 오른쪽 버튼으로 눌러 <em>모두 압축 풀기</em>를 선택하세요. 압축을 푼 폴더 전체를 함께 두어야 실행됩니다.</p></div>
+        <div class="step"><b>처음 실행</b><p>"Windows의 PC 보호" 창이 뜨면 <em>추가 정보 → 실행</em>을 누르세요. 개인이 만든 앱이라 처음 한 번 나오는 안내입니다.</p></div>
+        <div class="step"><b>Mac에서</b><p>zip을 더블클릭해 풀고, 나온 앱을 <em>응용 프로그램</em> 폴더로 옮기세요. 처음 열 때 "열 수 없음" 경고가 뜨면 <em>시스템 설정 → 개인정보 보호 및 보안</em> 아래쪽의 <em>그래도 열기</em>를 누르세요. Mac 버전은 Apple Silicon(M1 이후) 전용입니다.</p></div>
+      </div>
+    </section>
 
-  <footer>
-    <span>© 2026 파이맨. 학교 안에서 자유롭게 쓰세요.</span>
-    <span id="links"></span>
-  </footer>
+    <!-- 장면 4: 개인정보·마무리 -->
+    <section class="scene" id="end" aria-label="마무리">
+      <div class="scene-head">
+        <div><h2>개인정보 안내</h2><p class="sub">모든 앱은 선생님 PC 안에서만 자료를 다룹니다.</p></div>
+      </div>
+      <div class="note"><strong>개인정보 안내</strong> · 배포 파일에는 학생 명단이나 개인 자료가 들어 있지 않습니다. 평가잇다의 AI 기능에는 개인정보를 가린 자료만 넣어 주세요.</div>
+      <div class="links" id="links"></div>
+      <p class="copy">© 2026 파이맨. 학교 안에서 자유롭게 쓰세요.</p>
+    </section>
+  </main>
+
+  <nav class="nav" aria-label="장면 이동">
+    <button type="button" id="prev">← 이전</button>
+    <div class="dots" id="dots"></div>
+    <span class="where" id="where"></span>
+    <button type="button" id="next">다음 →</button>
+  </nav>
+  <p class="hint">키보드 ← → 로도 넘길 수 있습니다. 읽기 모드는 전체를 이어서 봅니다.</p>
 </div>
 
 <dialog id="keybox">
@@ -139,10 +229,11 @@ const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let data, os = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent) ? 'mac' : 'windows';
 
+// ── 앱 카드 ──
 function render() {
-  document.querySelectorAll('.seg button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.os === os)));
+  document.querySelectorAll('.bar .seg button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.os === os)));
   const label = os === 'mac' ? 'Mac' : 'Windows';
-  $('#apps').innerHTML = data.apps.map(a => {
+  $('#applist').innerHTML = data.apps.map(a => {
     const build = a[os];
     const button = build
       ? `<a class="btn" href="/api/get?app=${encodeURIComponent(a.id)}&os=${os}" target="_blank" rel="noopener" data-locked>${label}용 다운로드</a><span class="ver">v${esc(build.version).replace(/^v/, '')} · ${esc(build.size)}</span>`
@@ -171,14 +262,74 @@ fetch('apps.json', {cache: 'no-cache'}).then(r => r.json()).then(json => {
   $('#title').textContent = json.site.title;
   $('#tagline').textContent = json.site.tagline;
   $('#meta').textContent = `앱 ${json.apps.length}개 · ${json.site.updated} 업데이트`;
+  const mac = json.apps.filter(a => a.mac).length, win = json.apps.filter(a => a.windows).length;
+  $('#facts').innerHTML = `<li><b>${json.apps.length}</b>앱</li><li><b>${win}</b>Windows</li><li><b>${mac}</b>Mac</li><li><b>${esc(json.site.updated)}</b>마지막 업데이트</li>`;
   render();
 }).catch(() => {
-  $('#apps').innerHTML = '<div class="error">앱 목록을 불러오지 못했습니다. 잠시 후 새로고침해 주세요.</div>';
+  $('#applist').innerHTML = '<div class="error">앱 목록을 불러오지 못했습니다. 잠시 후 새로고침해 주세요.</div>';
 });
 
-document.querySelectorAll('.seg button').forEach(b => b.addEventListener('click', () => { os = b.dataset.os; render(); }));
+document.querySelectorAll('.bar .seg button').forEach(b => b.addEventListener('click', () => { os = b.dataset.os; render(); }));
 
-// 다운로드 잠금: 잠겨 있으면 비밀키 창을 먼저 띄우고, 풀리면 원래 누른 링크로 간다.
+// ── 장면 전환(발표 모드) ──
+const SCENES = ['cover', 'apps', 'guide', 'end'];
+const NAMES = {cover: '표지', apps: '앱 목록', guide: '처음 받으실 때', end: '개인정보 안내'};
+let current = 'cover';
+const dots = $('#dots');
+SCENES.forEach(id => {
+  const d = document.createElement('button');
+  d.type = 'button'; d.setAttribute('aria-label', NAMES[id]); d.dataset.go = id;
+  dots.appendChild(d);
+});
+function go(id, keepUrl) {
+  if (!SCENES.includes(id)) id = 'cover';
+  current = id;
+  const i = SCENES.indexOf(id);
+  SCENES.forEach(s => document.getElementById(s).classList.toggle('on', s === id));
+  dots.querySelectorAll('button').forEach((d, k) => d.setAttribute('aria-current', String(k === i)));
+  $('#prev').disabled = i === 0;
+  $('#next').disabled = i === SCENES.length - 1;
+  $('#where').textContent = `${i + 1} / ${SCENES.length} · ${NAMES[id]}`;
+  if (!keepUrl) { try { history.replaceState(null, '', id === 'cover' ? location.pathname : location.pathname + '#' + id); } catch {} }
+  if (document.body.classList.contains('mode-present')) {
+    window.scrollTo(0, 0);
+    const h = document.querySelector('#' + id + ' h2, #' + id + ' h1');
+    if (h) { h.setAttribute('tabindex', '-1'); h.focus({preventScroll: true}); }
+  } else if (id !== 'cover') {
+    document.getElementById(id).scrollIntoView({block: 'start'});
+  }
+}
+$('#prev').addEventListener('click', () => go(SCENES[SCENES.indexOf(current) - 1]));
+$('#next').addEventListener('click', () => go(SCENES[SCENES.indexOf(current) + 1]));
+document.addEventListener('click', e => { const b = e.target.closest('[data-go]'); if (b) go(b.dataset.go); });
+document.addEventListener('keydown', e => {
+  if (!document.body.classList.contains('mode-present') || e.target.closest('input, dialog')) return;
+  if (e.key === 'ArrowRight') { e.preventDefault(); $('#next').click(); }
+  if (e.key === 'ArrowLeft') { e.preventDefault(); $('#prev').click(); }
+  if (e.key === 'Escape') go('cover');
+});
+window.addEventListener('hashchange', () => go(location.hash.slice(1) || 'cover', true));
+
+// ── 보기 모드: 발표(장면 하나) / 읽기(모두 펼침) / 인쇄(정적 + 인쇄 대화상자) ──
+const modeSeg = document.querySelector('.top .seg');
+function setMode(m, silent) {
+  if (!['present', 'read', 'print'].includes(m)) m = 'present';
+  document.body.className = 'mode-' + m;
+  modeSeg.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.mode === m)));
+  try { localStorage.setItem('devapps-mode', m === 'print' ? 'read' : m); } catch {}
+  if (m === 'present') go(current, true);
+  if (m === 'print') document.querySelectorAll('#applist details').forEach(d => d.open = true);
+  if (m === 'print' && !silent) setTimeout(() => window.print(), 150);
+}
+modeSeg.addEventListener('click', e => { const b = e.target.closest('button'); if (b) setMode(b.dataset.mode); });
+window.addEventListener('afterprint', () => { if (document.body.classList.contains('mode-print')) setMode('read', true); });
+(function () {
+  let saved = null; try { saved = localStorage.getItem('devapps-mode'); } catch {}
+  setMode(saved === 'read' ? 'read' : 'present', true);
+  go(location.hash.slice(1) || 'cover', true);
+})();
+
+// ── 다운로드 잠금: 잠겨 있으면 비밀키 창을 먼저 띄우고, 풀리면 원래 누른 링크로 간다 ──
 let unlocked = false, pending = null;
 function renderLinks() {
   $('#links').innerHTML = `<a href="/api/get?app=folder" target="_blank" rel="noopener" data-locked>전체 파일 폴더</a> · <span class="lock">${unlocked ? '다운로드 열림 · <button type="button" id="relock">다시 잠그기</button>' : '다운로드 잠김'}</span>`;

@@ -5,3 +5,4 @@ compatibility_date = "2026-10-01"
 # 비밀 변수(Cloudflare에만 있음, 저장소에 없음)
 # DOWNLOAD_KEY  선생님께 알려 드리는 다운로드 비밀키
 # LINKS         {"blur:mac": "https://drive…", "folder": "…"} 형태의 JSON
+# ADMIN_KEY     파이맨 전용 영역(/private/)을 여는 관리자 키. 다운로드 키와 다른 값
