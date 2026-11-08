@@ -35,6 +35,7 @@ button:disabled{opacity:.6}
   <input id="k" type="password" placeholder="관리자 키" aria-label="관리자 키" required autofocus>
   <div class="err" id="e" role="alert"></div>
   <button type="submit" id="b">열기</button>
+  <p style="margin:14px 0 0;text-align:center"><a href="/" style="color:var(--muted);font-size:13px">← 공개 대문으로</a></p>
 </form>
 <script>
 document.getElementById('f').addEventListener('submit',async function(ev){
