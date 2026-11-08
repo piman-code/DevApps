@@ -67,7 +67,12 @@ button{font:inherit;cursor:pointer}
 .facts b{display:block;color:var(--text);font-size:22px;font-weight:700;letter-spacing:-.01em}
 .cta{display:inline-flex;align-items:center;gap:8px;margin-top:32px;background:var(--accent);color:var(--accent-text);font-weight:700;font-size:16px;padding:13px 22px;border-radius:14px;border:0}
 .cta:hover{opacity:.88}
-.mode-read .cta,.mode-print .cta{display:none}
+.doors{display:flex;flex-wrap:wrap;gap:10px;margin-top:32px}
+.doors .cta{margin-top:0;text-decoration:none}
+.cta.ghost{background:transparent;color:var(--text);border:1px solid var(--line)}
+.cta.ghost:hover{border-color:var(--text);opacity:1}
+.cta.ghost small{font-size:12px;font-weight:500;color:var(--muted);margin-left:6px}
+.mode-read .doors .cta[data-go],.mode-print .doors{display:none}
 
 /* 앱 목록 */
 .bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin:0 0 18px}
@@ -113,10 +118,6 @@ dd.sha{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;overflow
 /* 마무리 */
 #end .links{display:flex;flex-wrap:wrap;gap:8px 20px;font-size:14px;margin-top:8px}
 #end .copy{color:var(--muted);font-size:13px;margin-top:28px}
-/* 작은 입구: 저작권 줄 끝의 π. 관리자용이라 눈에 띄지 않게 둔다 */
-#end .door{display:inline-block;margin-left:10px;color:var(--muted);opacity:.45;text-decoration:none;font-family:"STIX Two Text","Times New Roman",serif;font-size:15px;line-height:1}
-#end .door:hover,#end .door:focus-visible{opacity:1}
-@media print{#end .door{display:none}}
 
 /* 하단 이전·다음 */
 .nav{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:28px;padding-top:18px;border-top:1px solid var(--line)}
@@ -174,7 +175,10 @@ dialog .ok{background:var(--accent);color:var(--accent-text)}
       <h1 id="title">파이맨의 DevApps</h1>
       <p class="tagline" id="tagline"></p>
       <ul class="facts" id="facts"></ul>
-      <button type="button" class="cta" data-go="apps">앱 보기 →</button>
+      <div class="doors">
+        <button type="button" class="cta" data-go="apps">앱 보기 →</button>
+        <a class="cta ghost" href="/private/">파이맨 전용 → <small>관리자 키 필요</small></a>
+      </div>
     </section>
 
     <!-- 장면 2: 앱 목록 -->
@@ -213,7 +217,7 @@ dialog .ok{background:var(--accent);color:var(--accent-text)}
       </div>
       <div class="note"><strong>개인정보 안내</strong> · 배포 파일에는 학생 명단이나 개인 자료가 들어 있지 않습니다. 평가잇다의 AI 기능에는 개인정보를 가린 자료만 넣어 주세요.</div>
       <div class="links" id="links"></div>
-      <p class="copy">© 2026 파이맨. 학교 안에서 자유롭게 쓰세요.<a class="door" href="/private/" aria-label="관리자 입구" title="관리자">π</a></p>
+      <p class="copy">© 2026 파이맨. 학교 안에서 자유롭게 쓰세요.</p>
     </section>
   </main>
 
