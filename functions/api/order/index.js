@@ -22,7 +22,7 @@ function cleanItems(items, survey) {
   for (const it of items) {
     const m = byName.get(String(it?.name || ''));
     const qty = Math.floor(Number(it?.qty));
-    if (!m || !(qty >= 1 && qty <= 20)) return null;
+    if (!m || m.hide || !(qty >= 1 && qty <= 20)) return null; // 가린 항목은 받지 않는다
     let temp = '';
     if (m.temp === 'both') temp = it?.temp === 'hot' ? 'hot' : 'ice';
     else if (m.temp === 'ice' || m.temp === 'hot') temp = m.temp;

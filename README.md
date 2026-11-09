@@ -18,6 +18,7 @@
 - `functions/_middleware.js` — 사이트 입구. `/private/` 아래는 관리자 쿠키가 맞을 때만 보여 주고, 아니면 401 로그인 화면을 줍니다. 인코딩한 주소(`/%70rivate/` 등)도 풀어서 막습니다.
 - `functions/api/unlock.js` — 다운로드 비밀키 확인, 30일 쿠키 `dk`. `functions/api/get.js` — 쿠키가 맞으면 실제 링크로 보냄.
 - `functions/api/admin.js` — 관리자 키 확인, 30일 쿠키 `ak`.
+- `site/order/` + `functions/api/order/` + `lib/order.js` — 선생님 주문·조사 모으기(웹앱). 조사와 제출은 KV `ORDERS`에 있고, 담당자 화면은 `site/private/order-admin.html`. 항목마다 **가리기**를 체크하면 선생님 화면에 보이지 않고 제출도 막힙니다(매장에 없는 메뉴·품절). 지우는 대신 가려 두면 나중에 체크만 풀어 되살릴 수 있습니다.
 - `lib/auth.js` — 서명·쿠키 공통 함수(두 잠금이 같이 씀).
 - `site/build.txt` — 배포한 커밋 SHA. 전용 대문의 "배포 확인"이 읽습니다.
 - `index.html`(맨 위) — 옛 주소(piman-code.github.io/DevApps)에서 새 주소로 넘겨 주는 안내 페이지.
