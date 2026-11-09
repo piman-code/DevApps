@@ -68,9 +68,11 @@ header h1{margin:0;font-size:18px}
 #bar button{background:var(--green);color:#fff;border:0;border-radius:12px;padding:13px 20px;font-size:15px;font-weight:800}
 #bar button:disabled{background:#b9c4bc;opacity:1}
 /* 확인 창 */
-#sheet{position:fixed;inset:0;background:rgba(15,25,18,.55);z-index:40;display:none;align-items:flex-end;justify-content:center}
+#sheet{position:fixed;inset:0;background:rgba(15,25,18,.55);z-index:40;display:none;align-items:center;justify-content:center;padding:16px}
 #sheet.open{display:flex}
-.panel{background:#fff;width:100%;max-width:560px;max-height:92vh;overflow:auto;border-radius:20px 20px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom))}
+.panel{background:#fff;width:100%;max-width:520px;max-height:calc(100vh - 32px);max-height:calc(100dvh - 32px);overflow:auto;border-radius:20px;padding:20px 18px;box-shadow:0 16px 48px rgba(0,0,0,.3)}
+.admin-link{display:inline-block;margin-top:14px;color:var(--mut);font-size:12.5px;text-decoration:none}
+.admin-link:hover{text-decoration:underline}
 .panel h2{margin:2px 0 10px;font-size:17px}
 .row{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px dashed var(--line);font-size:14px}
 .row .rn{flex:1;line-height:1.4}
@@ -106,6 +108,7 @@ footer{padding:0 14px 130px;font-size:12px;color:var(--mut);line-height:1.7}
     <input id="nick0" type="text" autocomplete="off" maxlength="20" placeholder="예: 햇살반, 김선생, 3학년부" onkeydown="if(event.key==='Enter')start()">
     <button id="startBtn" onclick="start()">시작하기</button>
     <div class="err" id="startErr"></div>
+    <a class="admin-link" href="/private/oozy-orders.html">주문 담당자 화면 →</a>
   </div>
 </div>
 
@@ -133,7 +136,8 @@ footer{padding:0 14px 130px;font-size:12px;color:var(--mut);line-height:1.7}
   <div class="grid" id="grid"></div>
   <footer>
     가격은 패스오더에 공개된 우지커피 공통 가격을 기준으로 정리했습니다. 함송점 매장 가격이나 아이스·디카페인 등 옵션 가격이 다르면 매장 기준이 우선합니다.<br>
-    사진 출처: 우지커피 공식 홈페이지(oozycoffee.com) · 함송점 전화 031-432-0624 (블로그 기준, 바뀌었을 수 있습니다)
+    사진 출처: 우지커피 공식 홈페이지(oozycoffee.com) · 함송점 전화 031-432-0624 (블로그 기준, 바뀌었을 수 있습니다)<br>
+    <a class="admin-link" href="/private/oozy-orders.html">주문 담당자 화면 →</a>
   </footer>
 </section>
 
