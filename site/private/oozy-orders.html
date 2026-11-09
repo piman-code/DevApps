@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>우지커피 주문 모아보기</title>
+<style>
+:root{--green:#0e6b3f;--green2:#0a4f2e;--bg:#f7f3ea;--ink:#1c2420;--mut:#6b756e;--line:#e3ddd0;--card:#fff;--red:#c0392b}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#141613;--ink:#eef0ec;--mut:#a3aca5;--line:#2f3530;--card:#1d211d}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;line-height:1.55}
+button,select{font-family:inherit;font-size:14px;cursor:pointer}
+header{background:var(--green);color:#fff;padding:16px}
+header h1{margin:0;font-size:19px}
+header p{margin:4px 0 0;font-size:13px;opacity:.85}
+main{max-width:760px;margin:0 auto;padding:12px 16px 60px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-top:12px}
+.card h2{margin:0 0 10px;font-size:16px}
+.set{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.set label{font-size:14px;font-weight:700}
+select{padding:8px 10px;border:1.5px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink)}
+.btn{border:0;border-radius:10px;padding:10px 14px;font-weight:700}
+.primary{background:var(--green);color:#fff}
+.plain{background:#e6ebe6;color:#1c2420}
+.danger{background:#fdecea;color:var(--red)}
+.pill{display:inline-block;padding:6px 12px;border-radius:999px;font-weight:800;font-size:13px}
+.pill.on{background:#dff3e7;color:var(--green2)}
+.pill.off{background:#fdecea;color:var(--red)}
+.stats{display:flex;gap:10px;flex-wrap:wrap}
+.stats div{flex:1;min-width:90px;background:var(--bg);border-radius:12px;padding:10px;text-align:center}
+.stats b{display:block;font-size:22px}
+.stats span{font-size:12.5px;color:var(--mut)}
+pre{white-space:pre-wrap;font-family:inherit;font-size:14px;background:var(--bg);border-radius:12px;padding:12px 14px;margin:10px 0;max-height:420px;overflow:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}
+td{padding:9px 4px;border-bottom:1px dashed var(--line);vertical-align:top}
+td small{color:var(--mut)}
+td:last-child{text-align:right;white-space:nowrap}
+.mut{color:var(--mut);font-size:13px}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+code{background:var(--bg);padding:2px 6px;border-radius:6px;font-size:13px;word-break:break-all}
+</style>
+</head>
+<body>
+<header>
+  <h1>☕ 우지커피 함송점 · 주문 모아보기</h1>
+  <p>파이맨 전용 · 선생님들이 제출한 주문이 여기 모입니다.</p>
+</header>
+<main>
+  <section class="card">
+    <h2>설정</h2>
+    <div class="set">
+      <span id="openPill" class="pill on">주문 받는 중</span>
+      <button class="btn plain" id="openBtn" onclick="toggleOpen()">마감하기</button>
+      <label for="limit">1인당 최대</label>
+      <select id="limit" onchange="saveSettings()">
+        <option value="0">제한 없음</option><option value="1">1개</option><option value="2">2개</option><option value="3">3개</option><option value="5">5개</option>
+      </select>
+    </div>
+    <p class="mut" style="margin:10px 0 0">선생님용 주소: <code id="link"></code> · 비밀번호 <code>oozy</code>
+      <button class="btn plain" style="padding:5px 10px;margin-left:4px" onclick="copy(location.origin+'/oozy-order/','주소를 복사했어요.')">주소 복사</button></p>
+  </section>
+
+  <section class="card">
+    <h2>모아보기 <button class="btn plain" style="padding:5px 10px;float:right" onclick="load()">새로고침</button></h2>
+    <div class="stats">
+      <div><b id="sPeople">0</b><span>명</span></div>
+      <div><b id="sItems">0</b><span>개</span></div>
+      <div><b id="sSum">0원</b><span>합계</span></div>
+    </div>
+    <pre id="text">불러오는 중…</pre>
+    <div class="row"><button class="btn primary" onclick="copy(document.getElementById('text').textContent,'주문 문구를 복사했어요.')">주문 문구 복사</button></div>
+  </section>
+
+  <section class="card">
+    <h2>사람별</h2>
+    <table><tbody id="list"></tbody></table>
+    <p class="mut" id="empty">아직 제출한 주문이 없어요.</p>
+    <div class="row" style="margin-top:14px"><button class="btn danger" onclick="reset()">전체 비우기 (다음 주문 준비)</button></div>
+  </section>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+const won=n=>n.toLocaleString("ko-KR")+"원";
+const tl=t=>t==="hot"?"핫 ":t==="ice"?"아이스 ":"";
+let S={settings:{open:true,limit:0},orders:[]};
+
+async function call(method,body){
+  const r=await fetch("/api/oozy/admin",{method,cache:"no-store",credentials:"same-origin",headers:body?{"Content-Type":"application/json"}:{},body:body?JSON.stringify(body):undefined});
+  if(r.status===401){location.reload();return false;}
+  const j=await r.json().catch(()=>({}));
+  if(!r.ok||!j.ok){alert(j.error==="not-configured"?"저장소(KV)가 연결되지 않았어요.":"실패했어요. 다시 해 주세요.");return false;}
+  S=j;draw();return true;
+}
+const load=()=>call("GET");
+const toggleOpen=()=>call("POST",{action:"settings",open:!S.settings.open,limit:S.settings.limit});
+const saveSettings=()=>call("POST",{action:"settings",open:S.settings.open,limit:Number($("limit").value)});
+function del(i){const o=S.orders[i];if(o&&confirm(`${o.nick} 님의 주문을 지울까요?`))call("POST",{action:"delete",nick:o.nick});}
+function reset(){if(S.orders.length&&confirm(`제출된 주문 ${S.orders.length}건을 모두 지울까요? 되돌릴 수 없어요.`))call("POST",{action:"reset"});}
+async function copy(t,msg){
+  try{await navigator.clipboard.writeText(t);}catch(e){const ta=document.createElement("textarea");ta.value=t;document.body.appendChild(ta);ta.select();document.execCommand("copy");ta.remove();}
+  alert(msg);
+}
+function draw(){
+  const {open,limit}=S.settings,orders=S.orders;
+  $("openPill").textContent=open?"주문 받는 중":"마감됨";$("openPill").className="pill "+(open?"on":"off");
+  $("openBtn").textContent=open?"마감하기":"다시 받기";$("limit").value=String(limit);
+  $("link").textContent=location.origin+"/oozy-order/";
+  const agg=new Map();let n=0,s=0;
+  orders.forEach(o=>o.items.forEach(x=>{const k=tl(x.temp)+x.name;const a=agg.get(k)||{q:0,p:0};a.q+=x.qty;a.p+=x.qty*x.price;agg.set(k,a);n+=x.qty;s+=x.qty*x.price;}));
+  $("sPeople").textContent=orders.length;$("sItems").textContent=n;$("sSum").textContent=won(s);
+  const d=new Date();
+  const lines=[`[우지커피 함송점 단체 주문] ${d.getMonth()+1}월 ${d.getDate()}일`,`총 ${orders.length}명 · ${n}개 · ${won(s)}`,"","■ 메뉴별"];
+  [...agg.entries()].sort((a,b)=>b[1].q-a[1].q).forEach(([k,a])=>lines.push(`- ${k} ${a.q}개 (${won(a.p)})`));
+  lines.push("","■ 사람별");
+  orders.forEach(o=>lines.push(`- ${o.nick}: ${o.items.map(x=>`${tl(x.temp)}${x.name} ${x.qty}`).join(", ")}${o.memo?` (요청: ${o.memo})`:""}`));
+  $("text").textContent=orders.length?lines.join("\n"):"아직 제출한 주문이 없어요.";
+  const tb=$("list");tb.innerHTML="";
+  orders.forEach((o,i)=>{
+    const tr=document.createElement("tr");
+    const a=document.createElement("td"),b=document.createElement("td"),c=document.createElement("td");
+    const t=new Date(o.at);
+    a.innerHTML="<b></b><br><small></small>";a.querySelector("b").textContent=o.nick;
+    a.querySelector("small").textContent=`${t.getMonth()+1}/${t.getDate()} ${String(t.getHours()).padStart(2,"0")}:${String(t.getMinutes()).padStart(2,"0")}`;
+    b.textContent=o.items.map(x=>`${tl(x.temp)}${x.name} ${x.qty}개`).join(", ")+(o.memo?` · 요청: ${o.memo}`:"");
+    const btn=document.createElement("button");btn.className="btn danger";btn.style.padding="6px 10px";btn.textContent="삭제";btn.onclick=()=>del(i);c.appendChild(btn);
+    tr.append(a,b,c);tb.appendChild(tr);
+  });
+  $("empty").hidden=orders.length>0;
+}
+load();
+setInterval(()=>{if(!document.hidden)load();},30000);
+</script>
+</body>
+</html>
