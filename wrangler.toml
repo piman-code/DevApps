@@ -7,7 +7,7 @@ compatibility_date = "2026-10-01"
 # LINKS         {"blur:mac": "https://drive…", "folder": "…"} 형태의 JSON
 # ADMIN_KEY     파이맨 전용 영역(/private/)을 여는 관리자 키. 다운로드 키와 다른 값
 
-# 우지커피 주문 모으기(/oozy-order/, /api/oozy/). 다운로드·전용 영역과 무관한 별도 저장소
+# 선생님 주문·조사 모으기(/order/, /api/order/). 다운로드·전용 영역과 무관한 별도 저장소
 [[kv_namespaces]]
-binding = "OOZY"
+binding = "ORDERS"
 id = "602820cffdfa4944acc84ea7da1103c3"
