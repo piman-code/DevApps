@@ -33,15 +33,21 @@
 - **웹앱 링크**: 다른 저장소에 있는 웹앱은 `apps.json`에 `"web": "https://…"`로 넣으면 「바로 열기」 카드가 됩니다(지금: 수업 3줄 메모). 공개하지 않을 웹앱은 `site/private/index.html` "나만 쓰는 도구"에 외부 링크 카드로 둡니다(전광판·모둠 편성·강의 원고).
 - **아이콘**: 어두운 배경 + 밝은 색 π. 아이폰 홈 화면을 '어둡게'로 두면 iOS가 웹 북마크 아이콘의 배경을 지우고 글자만 남기므로, 글자가 어두우면 안 보입니다. 아이콘을 바꾸면 `?v=` 숫자를 올리고, 이미 추가한 홈 화면 북마크는 지웠다가 다시 추가해야 바뀝니다.
 
-## 링크 반영과 배포
+## 자동 배포
+
+`main`에 push되면 `.github/workflows/deploy.yml`(GitHub Actions)이 Cloudflare Pages에 배포하고 `/build.txt`(= 배포한 커밋)를 확인합니다. **맥에서 `wrangler pages deploy`를 같이 하지 않습니다**(이중 배포). 결과는 GitHub 저장소의 Actions 탭에서 봅니다.
+
+처음 한 번: GitHub 저장소 Settings › Secrets and variables › Actions에 `CLOUDFLARE_API_TOKEN`(권한 Account › Cloudflare Pages › Edit), `CLOUDFLARE_ACCOUNT_ID`를 넣습니다. 강의 원고 저장소에 넣은 값과 같아도 됩니다. 넣은 뒤 Actions › DevApps 배포 › Run workflow로 한 번 돌립니다.
+
+## 링크 반영
+
+다운로드 링크(`links.json`)는 비밀 변수라 맥에서 넣습니다. 배포는 필요 없고 바로 적용됩니다.
 
 ```
 python3 -c "import json;print(json.dumps(json.load(open('links.json')),ensure_ascii=False),end='')" | npx wrangler pages secret put LINKS --project-name piman-devapps
-git rev-parse HEAD > site/build.txt
-npx wrangler pages deploy --branch main --commit-dirty=true
 ```
 
-커밋한 뒤 `site/build.txt`를 갱신하고 배포하면 전용 대문의 "배포 확인"에 그 SHA가 보입니다.
+비상용 수동 배포(Actions가 안 될 때만): `git rev-parse HEAD > site/build.txt && npx wrangler pages deploy --branch main --commit-dirty=true`
 
 ### 비밀키 바꾸기
 
