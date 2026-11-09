@@ -24,6 +24,24 @@
       "mac": null
     },
     {
+      "id": "memo",
+      "name": "수업 3줄 메모",
+      "symbol": "≡",
+      "color": "#3a6b5a",
+      "category": "수업",
+      "summary": "수업이 끝나고 30초, 관찰·해석·다음 행동을 세 줄로 남기는 메모",
+      "features": [
+        "① 관찰 ② 해석 ③ 다음 행동, 반별로 나눠 기록",
+        "다음 행동 체크리스트와 주간 회고(이번 주 메모 수·완료율)",
+        "JSON 백업·가져오기, Markdown 내보내기, 오프라인에서도 열림"
+      ],
+      "requirements": "설치 없이 휴대폰·PC 브라우저에서 엽니다. 메모는 그 기기 브라우저 안에만 저장되고 서버로 보내지 않습니다. 기기를 바꾸거나 방문 기록을 지우기 전에 JSON으로 백업하세요.",
+      "start": "바로 열기 → 아이폰은 공유 → 홈 화면에 추가하면 앱처럼 씁니다",
+      "web": "https://piman-code.github.io/lesson-memo/",
+      "windows": null,
+      "mac": null
+    },
+    {
       "id": "pyeonggaitda",
       "name": "평가잇다",
       "symbol": "✓",
