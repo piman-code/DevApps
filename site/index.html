@@ -250,7 +250,10 @@ function render() {
   const label = os === 'mac' ? 'Mac' : 'Windows';
   $('#applist').innerHTML = data.apps.map(a => {
     const build = a[os];
-    const button = build
+    // 웹앱(a.web): 설치 없이 브라우저에서 바로 여는 앱. 다운로드 잠금과 무관.
+    const button = a.web
+      ? `<a class="btn" href="${esc(a.web)}">바로 열기</a><span class="ver">설치 없음 · 휴대폰 가능</span>`
+      : build
       ? `<a class="btn" href="/api/get?app=${encodeURIComponent(a.id)}&os=${os}" target="_blank" rel="noopener" data-locked>${label}용 다운로드</a><span class="ver">v${esc(build.version).replace(/^v/, '')} · ${esc(build.size)}</span>`
       : `<span class="btn off">${label} 버전 준비 중</span>`;
     return `<article class="card">
