@@ -125,8 +125,10 @@ code{background:var(--bg);padding:2px 6px;border-radius:6px;font-size:13px;word-
       <label for="eTitle">제목</label><input id="eTitle" maxlength="60" placeholder="예: 금요일 우지커피 주문, 회식 배달 메뉴 조사">
       <label for="eDesc">안내 (선택)</label><textarea id="eDesc" rows="2" maxlength="300" placeholder="예: 11/14(금) 3시까지 받아요. 4시쯤 교무실로 배달됩니다."></textarea>
       <label for="eCode">선생님 비밀번호</label><input id="eCode" maxlength="40" placeholder="예: oozy (선생님들께 알려 드릴 값)">
-      <label for="eLimit">1인당 최대</label>
+      <label for="eLimit">1인당 최대 개수</label>
       <select id="eLimit"><option value="0">제한 없음</option><option value="1">1개</option><option value="2">2개</option><option value="3">3개</option><option value="5">5개</option></select>
+      <label for="eMaxWon">1인당 최대 금액</label>
+      <div><input id="eMaxWon" inputmode="numeric" maxlength="9" placeholder="예: 6000 (비우면 제한 없음)" style="max-width:240px"> <span class="mut">원 · 옵션 추가 요금 포함</span></div>
     </div>
   </div>
   <div class="card">
@@ -236,7 +238,7 @@ function drawDetail(j){
   $("dTitle").textContent=cur.title;
   $("dPill").textContent=cur.open?"받는 중":"마감";$("dPill").className="pill "+(cur.open?"on":"off");
   $("dOpenBtn").textContent=cur.open?"마감하기":"다시 받기";
-  $("dLimit").textContent=cur.limit?cur.limit+"개":"제한 없음";const hid=cur.items.filter(x=>x.hide).length;$("dItems").textContent=`${cur.items.length-hid}개${hid?` (${hid}개 가림)`:""}`;
+  $("dLimit").textContent=[cur.limit?cur.limit+"개":"",cur.maxWon?won(cur.maxWon)+"까지":""].filter(Boolean).join(" · ")||"제한 없음";const hid=cur.items.filter(x=>x.hide).length;$("dItems").textContent=`${cur.items.length-hid}개${hid?` (${hid}개 가림)`:""}`;
   $("dLink").textContent=linkOf(cur.id);$("dCode").textContent=cur.code;$("dOpenLink").href=linkOf(cur.id);
   const priced=cur.items.some(x=>x.price>0);
   const agg=new Map();let n=0,s=0;
@@ -459,7 +461,7 @@ async function openEditor(id){
   editId=id;$("eErr").textContent="";$("vEdit").hidden=false;
   if(!id){
     $("eHead").textContent="새 조사 만들기";$("tplRow").hidden=false;
-    $("eTitle").value="";$("eDesc").value="";$("eCode").value="";$("eLimit").value="0";setRows([{},{},{}]);setOpts([]);
+    $("eTitle").value="";$("eDesc").value="";$("eCode").value="";$("eLimit").value="0";$("eMaxWon").value="";setRows([{},{},{}]);setOpts([]);
     ["aiShop","aiBranch","aiUrls","aiScope","ePaste"].forEach(id=>$(id).value="");$("pasteMsg").textContent="";buildPrompt();
     return;
   }
@@ -467,10 +469,10 @@ async function openEditor(id){
   const j=await call("GET","/api/order/admin?s="+encodeURIComponent(id));if(!j)return;
   if(j.err){alert(j.err);go("#");return;}
   const s=j.survey;cur=s;
-  $("eTitle").value=s.title;$("eDesc").value=s.desc||"";$("eCode").value=s.code;$("eLimit").value=String(s.limit);setRows(s.items);setOpts(s.options||[]);
+  $("eTitle").value=s.title;$("eDesc").value=s.desc||"";$("eCode").value=s.code;$("eLimit").value=String(s.limit);$("eMaxWon").value=s.maxWon?String(s.maxWon):"";setRows(s.items);setOpts(s.options||[]);
 }
 async function save(){
-  const survey={title:$("eTitle").value.trim(),desc:$("eDesc").value.trim(),code:$("eCode").value.trim(),limit:Number($("eLimit").value),items:readRows(),options:readOpts()};
+  const survey={title:$("eTitle").value.trim(),desc:$("eDesc").value.trim(),code:$("eCode").value.trim(),limit:Number($("eLimit").value),maxWon:Number($("eMaxWon").value.replace(/[^0-9]/g,""))||0,items:readRows(),options:readOpts()};
   if(editId)survey.open=cur.open;
   if(!survey.title){$("eErr").textContent="제목을 써 주세요.";return;}
   if(!survey.code){$("eErr").textContent="선생님 비밀번호를 정해 주세요.";return;}

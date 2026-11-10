@@ -196,7 +196,7 @@ const store={get(k){try{return localStorage.getItem(k)||""}catch(e){return ""}},
 const SID=(new URLSearchParams(location.search).get("s")||"").toLowerCase().replace(/[^a-z0-9]/g,"");
 const S={code:store.get("order_code_"+SID),nick:store.get("order_nick"),token:store.get("order_token")};
 if(!S.token){S.token=(crypto.randomUUID?crypto.randomUUID():Math.random().toString(36).slice(2)+Date.now().toString(36));store.set("order_token",S.token);}
-let MENU=[],CATS=[],OPTS=[],priced=false,limit=0,open=true,mine=null,editing=false,curCat="전체";
+let MENU=[],CATS=[],OPTS=[],priced=false,limit=0,maxWon=0,open=true,mine=null,editing=false,curCat="전체";
 // 담은 줄: 같은 메뉴라도 옵션이 다르면 다른 줄. {id, item, qty, temp, opts:{묶음이름: 선택지}}
 const lines=[];let lineSeq=0;
 const clearCart=()=>{lines.length=0;};
@@ -219,7 +219,7 @@ async function api(body){
   return {status:r.status,...j};
 }
 function errMsg(j){
-  return {closed:"마감됐어요.",limit:`1인 ${j.limit}개까지만 고를 수 있어요.`,taken:"이미 다른 분이 쓰는 닉네임이에요. 닉네임을 바꿔 주세요.",code:"비밀번호가 바뀌었어요. 새로고침 후 다시 들어와 주세요.","no-survey":"이 조사는 없어졌어요.",bad:"조사 내용이 바뀌었어요. 새로고침 후 다시 골라 주세요."}[j.error]||"잠시 후 다시 해 주세요.";
+  return {closed:"마감됐어요.",limit:`1인 ${j.limit}개까지만 고를 수 있어요.`,maxWon:`1인 ${won(j.maxWon||0)}까지만 고를 수 있어요.`,taken:"이미 다른 분이 쓰는 닉네임이에요. 닉네임을 바꿔 주세요.",code:"비밀번호가 바뀌었어요. 새로고침 후 다시 들어와 주세요.","no-survey":"이 조사는 없어졌어요.",bad:"조사 내용이 바뀌었어요. 새로고침 후 다시 골라 주세요."}[j.error]||"잠시 후 다시 해 주세요.";
 }
 
 /* 링크에 조사가 없으면: 받는 중인 조사 목록 */
@@ -237,7 +237,7 @@ async function choose(){
 /* ① 시작 */
 function showStart(){$("code").value=S.code;$("nick0").value=S.nick;$("start").hidden=false;}
 function applySurvey(sv){
-  MENU=sv.items;OPTS=sv.options||[];limit=sv.limit;open=sv.open;
+  MENU=sv.items;OPTS=sv.options||[];limit=sv.limit;maxWon=sv.maxWon||0;open=sv.open;
   priced=MENU.some(x=>x.price>0);
   CATS=[...new Set(MENU.map(x=>x.cat).filter(Boolean))];
   document.title=sv.title;$("title").textContent=sv.title;$("startTitle").textContent=sv.title;
@@ -298,6 +298,7 @@ function show(){
   let note="";
   if(!open)note+="지금은 받지 않아요(마감). ";
   if(limit>0&&!done)note+=limit===1?"1인 1개만 고를 수 있어요. 다른 것을 누르면 바뀝니다. ":`1인 ${limit}개까지 고를 수 있어요. `;
+  if(maxWon>0&&!done)note+=`1인 ${won(maxWon)}까지 고를 수 있어요(옵션 추가 요금 포함). `;
   if(editing)note+="제출한 것을 고치는 중이에요. 다시 [제출하기]를 눌러야 바뀝니다.";
   $("notice").textContent=note.trim();$("notice").hidden=!note;
   if(done){
@@ -324,30 +325,36 @@ function render(){
     grid.appendChild(card);
   });
   const{n,s}=total();
-  $("barSum").innerHTML=n?`담은 것 <b>${n}개</b>${priced?` · <b>${won(s)}</b>`:""}`:"골라 주세요";
+  $("barSum").innerHTML=(n?`담은 것 <b>${n}개</b>${priced?` · <b>${won(s)}</b>`:""}`:"골라 주세요")+(maxWon?`<br>남은 금액 <b>${won(Math.max(maxWon-s,0))}</b> / ${won(maxWon)}`:"");
   $("barBtn").disabled=!n;
 }
 function refresh(){render();if($("sheet").classList.contains("open")){if(lines.length)openSheet();else closeSheet();}}
 const newLine=(it,o)=>({id:++lineSeq,item:it,qty:1,temp:defaultTemp(it),opts:{},...o});
 const full=()=>limit>0&&total().n>=limit;
+const unitOf=l=>l.item.price+optInfo(l).extra;
+const overWon=add=>maxWon>0&&total().s+add>maxWon;
+const wonMsg=()=>`1인 ${won(maxWon)}까지예요. 지금 ${won(total().s)} 담았어요.`;
 function addItem(i){
   const it=MENU[i];
   if(!open){toast("마감됐어요.");return;}
+  if(maxWon>0&&it.price>maxWon){toast(`이 메뉴는 1인 한도(${won(maxWon)})보다 비싸요.`);return;}
   if(limit===1)clearCart();
   else if(full()){toast(`1인 ${limit}개까지예요. 담은 것을 빼고 골라 주세요.`);return;}
+  if(overWon(it.price)){toast(wonMsg()+" 담은 것을 빼고 골라 주세요.");return;}
   lines.push(newLine(it));refresh();
   if(OPTS.length&&optsFor(it,defaultTemp(it)).length)toast("옵션은 [제출하기]에서 고를 수 있어요.");
 }
 function chQty(i,d){ // 카드의 −/+ : 그 메뉴의 마지막 줄을 늘리거나 줄인다
   const it=MENU[i];const l=[...lines].reverse().find(x=>x.item===it);if(!l)return;
   if(d>0&&full()){toast(`1인 ${limit}개까지예요.`);return;}
+  if(d>0&&overWon(unitOf(l))){toast(wonMsg());return;}
   l.qty+=d;if(l.qty<=0)lines.splice(lines.indexOf(l),1);refresh();
 }
 function removeItem(i){for(let k=lines.length-1;k>=0;k--)if(lines[k].item===MENU[i])lines.splice(k,1);refresh();}
 const lineById=id=>lines.find(l=>l.id===id);
-function lineQty(id,d){const l=lineById(id);if(!l)return;if(d>0&&full()){toast(`1인 ${limit}개까지예요.`);return;}l.qty+=d;if(l.qty<=0)lines.splice(lines.indexOf(l),1);refresh();}
+function lineQty(id,d){const l=lineById(id);if(!l)return;if(d>0&&full()){toast(`1인 ${limit}개까지예요.`);return;}if(d>0&&overWon(unitOf(l))){toast(wonMsg());return;}l.qty+=d;if(l.qty<=0)lines.splice(lines.indexOf(l),1);refresh();}
 function lineDel(id){const l=lineById(id);if(l)lines.splice(lines.indexOf(l),1);refresh();}
-function lineDup(id){const l=lineById(id);if(!l)return;if(full()){toast(`1인 ${limit}개까지예요.`);return;}lines.splice(lines.indexOf(l)+1,0,newLine(l.item,{temp:l.temp}));refresh();}
+function lineDup(id){const l=lineById(id);if(!l)return;if(full()){toast(`1인 ${limit}개까지예요.`);return;}if(overWon(l.item.price)){toast(wonMsg());return;}lines.splice(lines.indexOf(l)+1,0,newLine(l.item,{temp:l.temp}));refresh();}
 function lineTemp(id,v){const l=lineById(id);if(l){l.temp=v;refresh();}}
 function lineOpt(id,g,v){const l=lineById(id);if(l){l.opts[g]=v;refresh();}}
 
@@ -365,7 +372,10 @@ function openSheet(){
     row.innerHTML=`<div class="rn"><b>${esc(it.name)}</b> ${t}${unit?` <small>${won(unit)}</small>`:""}${ops?`<div class="opts">${ops}</div>`:""}${dup}</div>${q}<button class="del" onclick="lineDel(${l.id})">빼기</button>`;
     rows.appendChild(row);
   });
-  $("total").textContent=won(total().s);$("sheetNick").textContent=S.nick;$("sheetErr").textContent="";
+  const tot=total().s,over=maxWon>0&&tot>maxWon;
+  $("total").textContent=won(tot)+(maxWon?` / ${won(maxWon)}`:"");$("sheetNick").textContent=S.nick;
+  $("sheetErr").textContent=over?`한도 ${won(maxWon)}보다 ${won(tot-maxWon)} 많아요. 옵션이나 개수를 줄여 주세요.`:"";
+  $("submitBtn").disabled=over;
   $("sheet").classList.add("open");
 }
 function closeSheet(){$("sheet").classList.remove("open");}

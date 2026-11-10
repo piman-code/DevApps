@@ -68,6 +68,8 @@ export async function onRequestPost({ request, env }) {
     if (!items) return json({ ok: false, error: 'bad' }, 400);
     const n = items.reduce((s, x) => s + x.qty, 0);
     if (survey.limit > 0 && n > survey.limit) return json({ ok: false, error: 'limit', limit: survey.limit }, 400);
+    const won = items.reduce((s, x) => s + x.qty * x.price, 0);
+    if (survey.maxWon > 0 && won > survey.maxWon) return json({ ok: false, error: 'maxWon', maxWon: survey.maxWon }, 400);
     const o = { nick, token, items, memo: String(b.memo || '').trim().slice(0, 100), at: Date.now() };
     await env.ORDERS.put(key, JSON.stringify(o));
     return json({ ok: true, mine: pubOrder(o) });
