@@ -85,6 +85,12 @@ header h1{margin:0;font-size:18px}
 .row select{padding:6px;border:1.5px solid var(--line);border-radius:8px;font-size:13px}
 .row .rq{display:flex;align-items:center;gap:7px}
 .row .rq button{border:0;background:#eef1ee;width:28px;height:28px;border-radius:50%;font-weight:800}
+.row{align-items:flex-start}
+.row .rq,.row .del{margin-top:2px}
+.opts{display:flex;flex-wrap:wrap;gap:6px 10px;margin-top:6px}
+.opt{font-size:12.5px;color:var(--mut);display:inline-flex;align-items:center;gap:4px}
+.opt select{padding:5px 6px;font-size:13px;color:var(--ink)}
+.dup{display:block;margin-top:6px;border:0;background:none;color:var(--green);font-size:12.5px;font-weight:700;padding:2px 0}
 .row .del{border:0;background:#fdecea;color:var(--red);border-radius:8px;padding:7px 10px;font-size:12.5px;font-weight:700}
 .fld{margin-top:13px}
 .fld label{display:block;font-size:13px;font-weight:700;margin-bottom:6px}
@@ -190,8 +196,19 @@ const store={get(k){try{return localStorage.getItem(k)||""}catch(e){return ""}},
 const SID=(new URLSearchParams(location.search).get("s")||"").toLowerCase().replace(/[^a-z0-9]/g,"");
 const S={code:store.get("order_code_"+SID),nick:store.get("order_nick"),token:store.get("order_token")};
 if(!S.token){S.token=(crypto.randomUUID?crypto.randomUUID():Math.random().toString(36).slice(2)+Date.now().toString(36));store.set("order_token",S.token);}
-let MENU=[],CATS=[],priced=false,limit=0,open=true,mine=null,editing=false,curCat="전체";
-const cart=new Map(); // 이름 -> {item, qty, temp}
+let MENU=[],CATS=[],OPTS=[],priced=false,limit=0,open=true,mine=null,editing=false,curCat="전체";
+// 담은 줄: 같은 메뉴라도 옵션이 다르면 다른 줄. {id, item, qty, temp, opts:{묶음이름: 선택지}}
+const lines=[];let lineSeq=0;
+const clearCart=()=>{lines.length=0;};
+// 이 항목(그 온도)에 보이는 옵션 묶음. 서버(lib/order.js optsFor)와 같은 규칙.
+const optsFor=(item,temp)=>OPTS.filter(g=>(!g.cats.length||g.cats.includes(item.cat))&&(g.when==="always"||g.when===temp));
+function optInfo(l){ // 기본값이 아닌 선택과 추가 금액
+  let extra=0;const picked=[];
+  optsFor(l.item,l.temp).forEach(g=>{const c=g.choices.find(x=>x.name===l.opts[g.name])||g.choices[0];extra+=c.price;if(c!==g.choices[0])picked.push({g:g.name,c:c.name,p:c.price});});
+  return {extra,picked};
+}
+const optLabel=o=>o.c.includes(o.g)?o.c:`${o.g} ${o.c}`;
+const optsText=arr=>(arr||[]).map(optLabel).join(", ");
 
 let toastT;
 function toast(t){const el=$("toast");el.textContent=t;el.classList.add("on");clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove("on"),2200);}
@@ -220,7 +237,7 @@ async function choose(){
 /* ① 시작 */
 function showStart(){$("code").value=S.code;$("nick0").value=S.nick;$("start").hidden=false;}
 function applySurvey(sv){
-  MENU=sv.items;limit=sv.limit;open=sv.open;
+  MENU=sv.items;OPTS=sv.options||[];limit=sv.limit;open=sv.open;
   priced=MENU.some(x=>x.price>0);
   CATS=[...new Set(MENU.map(x=>x.cat).filter(Boolean))];
   document.title=sv.title;$("title").textContent=sv.title;$("startTitle").textContent=sv.title;
@@ -233,7 +250,7 @@ function applySurvey(sv){
   });
   $("searchBox").hidden=MENU.length<=12;
   $("totalRow").hidden=!priced;
-  for(const [k,e] of cart){const it=MENU.find(m=>m.name===k);if(it)e.item=it;else cart.delete(k);}
+  for(let i=lines.length-1;i>=0;i--){const it=MENU.find(m=>m.name===lines[i].item.name);if(it)lines[i].item=it;else lines.splice(i,1);}
 }
 async function start(auto){
   const err=$("startErr");
@@ -261,14 +278,14 @@ async function changeNick(){
     if(!j.ok){toast(errMsg(j));return;}
     mine=null;
   }
-  cart.clear();editing=false;$("startErr").textContent="";showStart();
+  clearCart();editing=false;$("startErr").textContent="";showStart();
 }
 
 /* 화면 */
 function phrase(items,memo){
   const lines=[`[${$("title").textContent}] 닉네임: ${S.nick}`];
   let s=0;
-  items.forEach(x=>{s+=x.price*x.qty;lines.push(`- ${x.temp?tempLabel(x.temp)+" ":""}${x.name} ${x.qty}개${x.price?` (${won(x.price*x.qty)})`:""}`);});
+  items.forEach(x=>{s+=x.price*x.qty;const o=optsText(x.opts);lines.push(`- ${x.temp?tempLabel(x.temp)+" ":""}${x.name}${o?` [${o}]`:""} ${x.qty}개${x.price?` (${won(x.price*x.qty)})`:""}`);});
   if(s)lines.push(`합계: ${won(s)}`);
   if(memo)lines.push(`요청: ${memo}`);
   return lines.join("\n");
@@ -290,16 +307,17 @@ function show(){
   }
   render();
 }
-function total(){let n=0,s=0;cart.forEach(e=>{n+=e.qty;s+=e.qty*e.item.price;});return{n,s};}
+function total(){let n=0,s=0;lines.forEach(l=>{n+=l.qty;s+=l.qty*(l.item.price+optInfo(l).extra);});return{n,s};}
+const qtyOf=it=>lines.filter(l=>l.item===it).reduce((s,l)=>s+l.qty,0);
 function render(){
   const q=$("q").value.trim();const grid=$("grid");grid.innerHTML="";
   MENU.forEach((it,i)=>{
     if(!((curCat==="전체"||it.cat===curCat)&&(!q||it.name.includes(q))))return;
-    const e=cart.get(it.name);
-    const ctl=!e?`<button class="add" onclick="addItem(${i})">담기</button>`
+    const n=qtyOf(it);
+    const ctl=!n?`<button class="add" onclick="addItem(${i})">담기</button>`
       :limit===1?`<button class="cancel" onclick="removeItem(${i})">✕ 취소</button>`
-      :`<span class="qty"><button class="${e.qty===1?"x":""}" onclick="chQty(${i},-1)" aria-label="${e.qty===1?"취소":"빼기"}">${e.qty===1?"✕":"−"}</button><b>${e.qty}</b><button onclick="chQty(${i},1)" aria-label="더하기">+</button></span>`;
-    const card=document.createElement("div");card.className="card"+(e?" sel":"");
+      :`<span class="qty"><button class="${n===1?"x":""}" onclick="chQty(${i},-1)" aria-label="${n===1?"취소":"빼기"}">${n===1?"✕":"−"}</button><b>${n}</b><button onclick="chQty(${i},1)" aria-label="더하기">+</button></span>`;
+    const card=document.createElement("div");card.className="card"+(n?" sel":"");
     card.innerHTML=`${it.img?`<div class="ph"><img loading="lazy" src="${esc(it.img)}" alt="${esc(it.name)}"></div>`:""}
       <div class="bd"><div class="nm">${esc(it.name)}</div>${it.desc?`<div class="ds">${esc(it.desc)}</div>`:""}
       <div class="pr">${it.price?`<b>${won(it.price)}</b>`:""}${ctl}</div></div>`;
@@ -309,32 +327,42 @@ function render(){
   $("barSum").innerHTML=n?`담은 것 <b>${n}개</b>${priced?` · <b>${won(s)}</b>`:""}`:"골라 주세요";
   $("barBtn").disabled=!n;
 }
-function refresh(){render();if($("sheet").classList.contains("open")){if(cart.size)openSheet();else closeSheet();}}
+function refresh(){render();if($("sheet").classList.contains("open")){if(lines.length)openSheet();else closeSheet();}}
+const newLine=(it,o)=>({id:++lineSeq,item:it,qty:1,temp:defaultTemp(it),opts:{},...o});
+const full=()=>limit>0&&total().n>=limit;
 function addItem(i){
   const it=MENU[i];
   if(!open){toast("마감됐어요.");return;}
-  if(limit===1)cart.clear();
-  else if(limit>0&&total().n>=limit){toast(`1인 ${limit}개까지예요. 담은 것을 빼고 골라 주세요.`);return;}
-  cart.set(it.name,{item:it,qty:1,temp:defaultTemp(it)});refresh();
+  if(limit===1)clearCart();
+  else if(full()){toast(`1인 ${limit}개까지예요. 담은 것을 빼고 골라 주세요.`);return;}
+  lines.push(newLine(it));refresh();
+  if(OPTS.length&&optsFor(it,defaultTemp(it)).length)toast("옵션은 [제출하기]에서 고를 수 있어요.");
 }
-function chQty(i,d){
-  const e=cart.get(MENU[i].name);if(!e)return;
-  if(d>0&&limit>0&&total().n>=limit){toast(`1인 ${limit}개까지예요.`);return;}
-  e.qty+=d;if(e.qty<=0)cart.delete(MENU[i].name);refresh();
+function chQty(i,d){ // 카드의 −/+ : 그 메뉴의 마지막 줄을 늘리거나 줄인다
+  const it=MENU[i];const l=[...lines].reverse().find(x=>x.item===it);if(!l)return;
+  if(d>0&&full()){toast(`1인 ${limit}개까지예요.`);return;}
+  l.qty+=d;if(l.qty<=0)lines.splice(lines.indexOf(l),1);refresh();
 }
-function removeItem(i){cart.delete(MENU[i].name);refresh();}
-function setTemp(i,v){const e=cart.get(MENU[i].name);if(e)e.temp=v;}
+function removeItem(i){for(let k=lines.length-1;k>=0;k--)if(lines[k].item===MENU[i])lines.splice(k,1);refresh();}
+const lineById=id=>lines.find(l=>l.id===id);
+function lineQty(id,d){const l=lineById(id);if(!l)return;if(d>0&&full()){toast(`1인 ${limit}개까지예요.`);return;}l.qty+=d;if(l.qty<=0)lines.splice(lines.indexOf(l),1);refresh();}
+function lineDel(id){const l=lineById(id);if(l)lines.splice(lines.indexOf(l),1);refresh();}
+function lineDup(id){const l=lineById(id);if(!l)return;if(full()){toast(`1인 ${limit}개까지예요.`);return;}lines.splice(lines.indexOf(l)+1,0,newLine(l.item,{temp:l.temp}));refresh();}
+function lineTemp(id,v){const l=lineById(id);if(l){l.temp=v;refresh();}}
+function lineOpt(id,g,v){const l=lineById(id);if(l){l.opts[g]=v;refresh();}}
 
 /* ③ 제출 */
 function openSheet(){
   const rows=$("rows");rows.innerHTML="";
-  cart.forEach(e=>{
-    const it=e.item,i=MENU.indexOf(it);
-    const t=it.temp==="both"?`<select onchange="setTemp(${i},this.value)"><option value="ice"${e.temp==="ice"?" selected":""}>아이스</option><option value="hot"${e.temp==="hot"?" selected":""}>핫</option></select>`
+  lines.forEach(l=>{
+    const it=l.item,{extra}=optInfo(l),unit=it.price+extra;
+    const t=it.temp==="both"?`<select onchange="lineTemp(${l.id},this.value)" aria-label="아이스/핫"><option value="ice"${l.temp==="ice"?" selected":""}>아이스</option><option value="hot"${l.temp==="hot"?" selected":""}>핫</option></select>`
       :(it.temp==="ice"||it.temp==="hot")?`<small>${tempLabel(it.temp)}</small>`:"";
-    const q=limit===1?"":`<div class="rq"><button onclick="chQty(${i},-1)">−</button><b>${e.qty}</b><button onclick="chQty(${i},1)">+</button></div>`;
+    const ops=optsFor(it,l.temp).map(g=>`<label class="opt">${esc(g.name)} <select onchange="lineOpt(${l.id},this.dataset.g,this.value)" data-g="${esc(g.name)}">${g.choices.map((c,k)=>`<option value="${esc(c.name)}"${(l.opts[g.name]||g.choices[0].name)===c.name?" selected":""}>${esc(c.name)}${c.price?` (+${won(c.price)})`:""}</option>`).join("")}</select></label>`).join("");
+    const q=limit===1?"":`<div class="rq"><button onclick="lineQty(${l.id},-1)">−</button><b>${l.qty}</b><button onclick="lineQty(${l.id},1)">+</button></div>`;
+    const dup=limit===1||!ops?"":`<button class="dup" onclick="lineDup(${l.id})">＋ 다른 옵션으로 하나 더</button>`;
     const row=document.createElement("div");row.className="row";
-    row.innerHTML=`<div class="rn">${esc(it.name)} ${t}${it.price?`<br><small>${won(it.price)}</small>`:""}</div>${q}<button class="del" onclick="removeItem(${i})">빼기</button>`;
+    row.innerHTML=`<div class="rn"><b>${esc(it.name)}</b> ${t}${unit?` <small>${won(unit)}</small>`:""}${ops?`<div class="opts">${ops}</div>`:""}${dup}</div>${q}<button class="del" onclick="lineDel(${l.id})">빼기</button>`;
     rows.appendChild(row);
   });
   $("total").textContent=won(total().s);$("sheetNick").textContent=S.nick;$("sheetErr").textContent="";
@@ -342,8 +370,8 @@ function openSheet(){
 }
 function closeSheet(){$("sheet").classList.remove("open");}
 async function submitOrder(){
-  if(!cart.size)return;
-  const items=[...cart.values()].map(e=>({name:e.item.name,temp:e.temp,qty:e.qty}));
+  if(!lines.length)return;
+  const items=lines.map(l=>{const o={};optsFor(l.item,l.temp).forEach(g=>{if(l.opts[g.name])o[g.name]=l.opts[g.name];});return {name:l.item.name,temp:l.temp,qty:l.qty,opts:o};});
   const b=$("submitBtn");b.disabled=true;$("sheetErr").textContent="보내는 중…";
   try{
     const j=await api({action:"submit",items,memo:$("memo").value.trim()});
@@ -352,20 +380,20 @@ async function submitOrder(){
       if(j.error==="closed"){open=false;show();}
       $("sheetErr").textContent=errMsg(j);return;
     }
-    mine=j.mine;editing=false;cart.clear();$("memo").value="";closeSheet();show();window.scrollTo(0,0);toast("제출했어요!");
+    mine=j.mine;editing=false;clearCart();$("memo").value="";closeSheet();show();window.scrollTo(0,0);toast("제출했어요!");
   }catch(e){$("sheetErr").textContent="연결이 끊겼어요. 다시 눌러 주세요.";}
   finally{b.disabled=false;}
 }
 function edit(){
-  cart.clear();
-  mine.items.forEach(x=>{const it=MENU.find(m=>m.name===x.name);if(it)cart.set(it.name,{item:it,qty:x.qty,temp:x.temp||defaultTemp(it)});});
+  clearCart();
+  mine.items.forEach(x=>{const it=MENU.find(m=>m.name===x.name);if(!it)return;const o={};(x.opts||[]).forEach(p=>o[p.g]=p.c);lines.push(newLine(it,{qty:x.qty,temp:x.temp||defaultTemp(it),opts:o}));});
   $("memo").value=mine.memo||"";editing=true;show();window.scrollTo(0,0);
 }
 async function cancelOrder(){
   if(!confirm("제출한 것을 취소할까요?"))return;
   const j=await api({action:"cancel"});
   if(!j.ok){toast(errMsg(j));return;}
-  mine=null;editing=false;cart.clear();show();toast("취소했어요.");
+  mine=null;editing=false;clearCart();show();toast("취소했어요.");
 }
 
 if(!SID)choose();

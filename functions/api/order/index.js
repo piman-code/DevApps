@@ -5,7 +5,7 @@
 //   submit → 주문 저장(같은 닉네임·같은 기기면 덮어쓰기)
 //   cancel → 내 주문 취소
 import { json } from '../../../lib/auth.js';
-import { getSurvey, orderKey, normNick, pubOrder, pubSurvey, listKeys } from '../../../lib/order.js';
+import { getSurvey, orderKey, normNick, pubOrder, pubSurvey, listKeys, optsFor } from '../../../lib/order.js';
 
 export async function onRequestGet({ env }) {
   if (!env.ORDERS) return json({ ok: false, error: 'not-configured' }, 500);
@@ -26,7 +26,16 @@ function cleanItems(items, survey) {
     let temp = '';
     if (m.temp === 'both') temp = it?.temp === 'hot' ? 'hot' : 'ice';
     else if (m.temp === 'ice' || m.temp === 'hot') temp = m.temp;
-    out.push({ name: m.name, temp, qty, price: m.price }); // 이름·가격은 조사에 있는 값으로
+    // 옵션: 이 항목에 보이는 묶음만, 없는 선택지는 기본값으로. 기본값이 아닌 것만 저장한다.
+    const given = it?.opts && typeof it.opts === 'object' ? it.opts : {};
+    const opts = [];
+    let extra = 0;
+    for (const g of optsFor(survey, m, temp)) {
+      const c = g.choices.find(x => x.name === given[g.name]) || g.choices[0];
+      extra += c.price;
+      if (c !== g.choices[0]) opts.push({ g: g.name, c: c.name, p: c.price });
+    }
+    out.push({ name: m.name, temp, qty, price: m.price + extra, opts }); // 이름·가격은 조사에 있는 값으로
   }
   return out;
 }
