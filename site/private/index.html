@@ -92,6 +92,44 @@ pre{margin:12px 0 0;background:var(--surface-2);border-radius:12px;padding:14px 
 .nav .where{font-size:13px;color:var(--muted);white-space:nowrap}
 .mode-read .nav,.mode-print .nav{display:none}
 @media (max-width:480px){.wrap{padding:0 16px 40px}.grid{grid-template-columns:1fr}}
+/* ── 넘겨 보기 보강(2026-11-11, 강의 원고·intro와 같은 틀): 전환·내비 고정·쪽 넘기기·카드 반응 ── */
+@media (prefers-reduced-motion:no-preference){
+  .mode-present .scene.on{animation:inR .38s cubic-bezier(.2,.7,.2,1) both}
+  .mode-present[data-dir="back"] .scene.on{animation-name:inL}
+  .mode-present .scene.on .ch{display:inline-block;animation:chUp .5s cubic-bezier(.2,.7,.2,1) both;animation-delay:calc(var(--i)*32ms + 80ms)}
+  .mode-present .scene.on .pg:not(.pg-off){animation:in .42s cubic-bezier(.2,.7,.2,1) both;animation-delay:calc(var(--n,0)*60ms + 120ms)}
+}
+@keyframes inR{from{opacity:0;transform:translateX(26px)}to{opacity:1;transform:none}}
+@keyframes inL{from{opacity:0;transform:translateX(-26px)}to{opacity:1;transform:none}}
+@keyframes chUp{from{opacity:0;transform:translateY(.5em)}to{opacity:1;transform:none}}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.mode-present .wrap{padding-bottom:86px}
+.mode-present .stage{overflow-x:clip}
+.mode-present .scene-head{margin:0 0 14px}
+.mode-present .scene{max-height:calc(100vh - 182px);max-height:calc(100dvh - 182px);overflow:auto;scrollbar-width:thin;padding-right:2px}
+.mode-present #cover{padding-top:clamp(16px,4vh,56px)}
+.mode-present .nav{position:fixed;left:0;right:0;bottom:0;z-index:20;margin:0;border-top:0;justify-content:center;gap:14px;
+  padding:12px 20px max(12px,env(safe-area-inset-bottom));background:linear-gradient(to top,var(--bg) 62%,transparent)}
+.mode-present .nav > button{border-radius:999px;padding:10px 18px;font-weight:700;min-width:88px}
+.mode-present .nav #next{background:var(--accent);color:var(--accent-text);border-color:var(--accent)}
+.dots button{transition:all .2s}
+.dots button[aria-current="true"]{width:26px;border-radius:99px;transform:none}
+.mode-present .hint{display:none}
+@media (max-width:560px){.mode-present .nav .where{display:none}.mode-present .nav > button{min-width:76px;padding:10px 13px}}
+.prog{position:fixed;left:0;top:0;right:0;height:3px;z-index:20;pointer-events:none}
+.prog i{display:block;height:100%;width:0;background:var(--text);border-radius:0 3px 3px 0;transition:width .35s cubic-bezier(.2,.7,.2,1)}
+.mode-read .prog,.mode-print .prog{display:none}
+.mode-present .pg-off{display:none!important}
+.pager{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:14px;font-size:13px;font-weight:700;color:var(--muted);font-variant-numeric:tabular-nums}
+.pager button{width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--text);font-size:17px;line-height:1}
+.pager button:hover:not(:disabled){border-color:var(--text)}
+.pager button:disabled{opacity:.3;cursor:default}
+.mode-read .pager,.mode-print .pager{display:none}
+.card,.step{transition:transform .18s ease,border-color .18s,box-shadow .18s}
+.card:hover,.step:hover{background-image:radial-gradient(circle at var(--mx,50%) var(--my,50%),color-mix(in srgb,var(--text) 7%,transparent),transparent 62%)}
+@media (prefers-reduced-motion:reduce){.card,.step{transition:none;transform:none!important}}
+button,summary,.seg,.nav,.pager,.brand,.cta,.btn{-webkit-user-select:none;user-select:none}
+@media print{.prog,.pager{display:none!important}.pg-off{display:revert!important}}
 .mode-print .top .seg{display:none}
 @media print{
   body{background:#fff;color:#111}
@@ -106,8 +144,8 @@ pre{margin:12px 0 0;background:var(--surface-2);border-radius:12px;padding:14px 
   <header class="top">
     <a class="brand" href="/" title="공개 대문으로"><svg class="pi" viewBox="0 0 512 512" aria-hidden="true"><rect width="512" height="512" rx="112" fill="var(--pi-bg)"/><path fill="var(--pi-ink)" d="M331.3 381.9Q307.7 381.9 296.9 364.6Q286.2 347.2 286.2 321.6Q286.2 299 290.1 272.5Q294 246 299.8 218.5Q305.6 191 309.8 166.8L331.8 169.5Q330.2 177.3 327.8 197.3Q325.5 217.2 323.4 241.1Q321.3 264.9 321.3 285.4Q321.3 313.2 328.4 329.2Q335.4 345.2 351.7 345.2Q365.9 345.2 373.2 340.7Q380.5 336.2 385.8 331L394.2 338.3Q387.4 351.4 378.7 361.4Q370.1 371.4 358.8 376.6Q347.5 381.9 331.3 381.9ZM187 377.1H137.7L136.2 369.3Q153.5 338.9 166.3 313.9Q179.2 289 188.1 266.5Q197 243.9 202.8 219.8Q208.5 195.7 211.7 166.8L231.1 168.4Q230.6 184.7 227.4 207Q224.3 229.3 219.6 254.2Q214.8 279.1 209.1 302.9Q203.3 326.8 197.5 346.5Q191.8 366.1 187 377.1ZM121.5 200.9 111 195.7Q121.5 159.5 147.2 144.8Q172.9 130.1 213.8 130.1H401V138.5L394.2 172.1H222.2Q195.4 172.1 178.9 172.4Q162.4 172.6 152.2 175.2Q141.9 177.9 135.1 183.9Q128.3 189.9 121.5 200.9Z"/></svg> 파이맨 전용</a>
     <div class="seg" role="group" aria-label="보기 모드">
-      <button type="button" data-mode="present" aria-pressed="true">발표</button>
-      <button type="button" data-mode="read" aria-pressed="false">읽기</button>
+      <button type="button" data-mode="present" aria-pressed="true" title="한 장면씩 넘기며 봅니다">넘겨 보기</button>
+      <button type="button" data-mode="read" aria-pressed="false" title="모든 장면을 한 번에 펼쳐 봅니다">펼쳐 보기</button>
     </div>
   </header>
 
@@ -277,6 +315,80 @@ dlState();
 $('#relock').addEventListener('click', () => {
   fetch('/api/admin', {method: 'DELETE', credentials: 'same-origin'}).finally(() => location.reload());
 });
+// ── 넘겨 보기 보강(2026-11-11): 방향 전환·진행 막대·숫자 키·쓸어 넘기기·쪽 넘기기·카드 기울기 ──
+(function () {
+  const present = () => document.body.classList.contains('mode-present');
+  const prog = document.createElement('div'); prog.className = 'prog'; prog.setAttribute('aria-hidden', 'true'); prog.innerHTML = '<i></i>'; document.body.appendChild(prog);
+  const baseGo = go; let last = SCENES.indexOf(current);
+  go = function (id, keepUrl) {
+    const to = SCENES.includes(id) ? SCENES.indexOf(id) : 0;
+    document.body.dataset.dir = to < last ? 'back' : 'fwd'; last = to;
+    baseGo(id, keepUrl);
+    prog.firstChild.style.width = ((to + 1) / SCENES.length * 100) + '%';
+  };
+  // 장면 제목(h2)을 글자 단위로 쪼개 한 글자씩 올라오게. 읽는 프로그램에는 원문 그대로.
+  document.querySelectorAll('.scene h2').forEach(h => {
+    const t = h.firstChild; if (!t || t.nodeType !== 3 || !t.nodeValue.trim()) return;
+    const box = document.createElement('span'), sr = document.createElement('span'); sr.className = 'sr'; sr.textContent = t.nodeValue; box.appendChild(sr);
+    [...t.nodeValue].forEach((c, i) => { const x = document.createElement('span'); x.className = 'ch'; x.textContent = c === ' ' ? ' ' : c; x.style.setProperty('--i', i); x.setAttribute('aria-hidden', 'true'); box.appendChild(x); });
+    h.replaceChild(box, t);
+  });
+  document.addEventListener('keydown', e => {
+    const t = e.target;
+    if (!present() || (t.closest && t.closest('input, textarea, dialog')) || e.metaKey || e.ctrlKey || e.altKey) return;
+    if (e.key === 'PageDown') $('#next').click();
+    else if (e.key === 'PageUp') $('#prev').click();
+    else if (/^[1-9]$/.test(e.key) && +e.key <= SCENES.length) go(SCENES[+e.key - 1]);
+  });
+  // 휴대폰: 좌우로 쓸어 넘기기(가로 60px 이상이고 세로보다 클 때만)
+  const stage = document.querySelector('.stage'); let x0 = null, y0 = 0;
+  stage.addEventListener('touchstart', e => { if (e.touches.length === 1 && !e.target.closest('input')) { x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; } else x0 = null; }, {passive: true});
+  stage.addEventListener('touchend', e => {
+    if (x0 === null || !present()) return;
+    const dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0; x0 = null;
+    if (Math.abs(dx) >= 60 && Math.abs(dx) > Math.abs(dy) * 1.5) $(dx < 0 ? '#next' : '#prev').click();
+  }, {passive: true});
+  // 쪽 넘기기: 한 화면에 들어갈 만큼만 보이고 ‹ 1/3 › 로 넘긴다. 펼쳐 보기·인쇄에서는 CSS가 모두 보여 준다.
+  const mqWide = matchMedia('(min-width:1000px)'), mqMid = matchMedia('(min-width:660px)');
+  const cols = () => mqWide.matches ? 3 : mqMid.matches ? 2 : 1;
+  window.paginate = function (items, anchor, per) {
+    items = [...items]; if (!items.length) return;
+    const old = anchor.nextElementSibling; if (old && old.classList.contains('pager')) old.remove();
+    const pages = Math.ceil(items.length / per); let lab, prev, next;
+    const show = p => {
+      items.forEach((it, i) => { it.classList.add('pg'); it.classList.toggle('pg-off', Math.floor(i / per) !== p); it.style.setProperty('--n', i % per); });
+      if (lab) { lab.textContent = (p + 1) + ' / ' + pages; prev.disabled = p === 0; next.disabled = p === pages - 1; prev.onclick = () => show(p - 1); next.onclick = () => show(p + 1); }
+    };
+    if (pages > 1) {
+      const bar = document.createElement('div'); bar.className = 'pager';
+      prev = document.createElement('button'); next = document.createElement('button'); lab = document.createElement('span');
+      prev.type = next.type = 'button'; prev.textContent = '‹'; next.textContent = '›'; prev.setAttribute('aria-label', '이전 쪽'); next.setAttribute('aria-label', '다음 쪽');
+      bar.append(prev, lab, next); anchor.after(bar);
+    }
+    show(0);
+  };
+  window.repage = function () { PAGED.forEach(f => f(cols())); };
+  mqWide.addEventListener('change', repage); mqMid.addEventListener('change', repage);
+  // 카드가 마우스를 따라 살짝 기운다(마우스가 있는 기기, 움직임 줄이기가 꺼져 있을 때만)
+  if (matchMedia('(hover:hover)').matches && !matchMedia('(prefers-reduced-motion:reduce)').matches) {
+    let cur = null; const reset = () => { if (cur) { cur.style.transform = ''; cur = null; } };
+    document.addEventListener('pointermove', e => {
+      const c = e.target.closest ? e.target.closest('.card, .step') : null;
+      if (c !== cur) reset(); if (!c) return;
+      cur = c; const r = c.getBoundingClientRect(), px = (e.clientX - r.left) / r.width, py = (e.clientY - r.top) / r.height;
+      c.style.setProperty('--mx', (px * 100) + '%'); c.style.setProperty('--my', (py * 100) + '%');
+      c.style.transform = 'perspective(900px) rotateX(' + ((.5 - py) * 3).toFixed(2) + 'deg) rotateY(' + ((px - .5) * 4).toFixed(2) + 'deg)';
+    });
+    document.addEventListener('pointerleave', reset);
+  }
+  document.addEventListener('mousedown', e => { if (e.detail > 1 && e.target.closest && e.target.closest('button, summary, .brand, .cta, .btn')) e.preventDefault(); });
+  // 전용 대문: 도구 카드·관리 블록 쪽 넘기기(제목은 지금처럼 공개 대문으로)
+  window.PAGED = [
+    n => paginate(document.querySelectorAll('#tools .grid > *'), document.querySelector('#tools .grid'), n),
+    n => { const b = document.querySelectorAll('#admin .block'); paginate(b, b[b.length - 1], n === 1 ? 1 : 2); },
+  ];
+  go(current, true); repage();
+})();
 </script>
 </body>
 </html>
