@@ -37,7 +37,7 @@ button{font:inherit;cursor:pointer}
 .seg button{border:0;background:none;color:var(--muted);font-weight:600;font-size:14px;padding:8px 16px;border-radius:999px}
 .seg button[aria-pressed="true"]{background:var(--surface);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.08)}
 
-/* 무대와 장면: 발표 모드에서는 장면 하나만 보인다 */
+/* 무대와 장면: 넘겨 보기에서는 장면 하나만 보인다 */
 .stage{margin-top:18px}
 .scene{display:none}
 .scene.on{display:block}
@@ -327,7 +327,7 @@ fetch('apps.json', {cache: 'no-cache'}).then(r => r.json()).then(json => {
 
 document.querySelectorAll('.bar .seg button').forEach(b => b.addEventListener('click', () => { os = b.dataset.os; render(); }));
 
-// ── 장면 전환(발표 모드) ──
+// ── 장면 전환(넘겨 보기) ──
 const SCENES = ['cover', 'apps', 'guide', 'end'];
 const NAMES = {cover: '표지', apps: '앱 목록', guide: '처음 받으실 때', end: '개인정보 안내'};
 let current = 'cover';
@@ -366,7 +366,7 @@ document.addEventListener('keydown', e => {
 });
 window.addEventListener('hashchange', () => go(location.hash.slice(1) || 'cover', true));
 
-// ── 보기 모드: 발표(장면 하나) / 읽기(모두 펼침) / 인쇄(정적 + 인쇄 대화상자) ──
+// ── 보기 모드: 넘겨 보기(장면 하나) / 펼쳐 보기(모두 펼침) / 인쇄(정적 + 인쇄 대화상자) ──
 const modeSeg = document.querySelector('.top .seg');
 function setMode(m, silent) {
   if (!['present', 'read', 'print'].includes(m)) m = 'present';
