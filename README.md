@@ -19,7 +19,9 @@
 - `functions/api/unlock.js` — 다운로드 비밀키 확인, 30일 쿠키 `dk`. `functions/api/get.js` — 쿠키가 맞으면 실제 링크로 보냄.
 - `functions/api/admin.js` — 관리자 키 확인, 30일 쿠키 `ak`.
 - `site/order/` + `functions/api/order/` + `lib/order.js` — 선생님 주문·조사 모으기(웹앱). 조사와 제출은 KV `ORDERS`에 있고, 담당자 화면은 `site/private/order-admin.html`. 항목마다 **가리기**를 체크하면 선생님 화면에 보이지 않고 제출도 막힙니다(매장에 없는 메뉴·품절). 지우는 대신 가려 두면 나중에 체크만 풀어 되살릴 수 있습니다.
+- `functions/api/home.js` + `lib/home.js` + `site/arrange.js` — 공개 대문 앱 카드의 **순서·숨김**. 전용 대문 「관리」의 "공개 대문 앱 순서 · 숨김"에서 ↑ ↓·숨김을 고치고 「저장」하면 배포 없이 반영됩니다. KV `ORDERS`의 `home-v1`(직전 값 `home-v1-prev`)에 앱 id 순서와 숨김만 저장하고, 이름·내용은 `apps.json` 그대로입니다. 저장이 없거나 못 읽으면 `apps.json` 순서 그대로 보입니다.
 - `lib/auth.js` — 서명·쿠키 공통 함수(두 잠금이 같이 씀).
+- `test/` — 확인 명령 `node --test test/*.test.mjs`(순서·숨김 검사).
 - `site/build.txt` — 배포한 커밋 SHA. 전용 대문의 "배포 확인"이 읽습니다.
 - `index.html`(맨 위) — 옛 주소(piman-code.github.io/DevApps)에서 새 주소로 넘겨 주는 안내 페이지.
 - 저장소에 없는 파일(.gitignore): `다운로드_비밀키.txt`, `파이맨전용_비밀키.txt`, `links.json`, `.dev.vars`. **절대 커밋하지 않기.**
@@ -29,6 +31,7 @@
 - **새 버전**: 구글 드라이브에 zip 업로드 → 공유 "링크가 있는 모든 사용자 · 뷰어" → 링크를 `links.json`의 `앱id:windows`(또는 `:mac`)에 넣기 → `site/apps.json`의 `version`, `size`, `sha256`, `site.updated` 수정 → 링크 반영과 배포(아래).
 - **Mac 버전 추가**: `"mac": null`을 `{ "version": "…", "size": "…", "sha256": "…", "start": "…" }`로 바꾸고 `links.json`에 `앱id:mac` 링크 추가. `start`가 있으면 그 운영체제에서는 앱 공통 `start` 대신 보입니다.
 - **새 앱**: `apps` 배열에 항목을 복사해 `id`, `name`, `symbol`, `color`, `category`, `summary`, `features`, `requirements`, `start`를 채웁니다.
+- **순서 바꾸기·잠시 숨기기**: 전용 대문(`/private/`) → 관리 → "공개 대문 앱 순서 · 숨김". 숨김은 대문 목록에서만 빼는 것이라 `apps.json`과 내려받기 주소는 그대로입니다(비밀로 만드는 기능이 아님). 저장한 뒤 `apps.json`에 새로 넣은 앱은 맨 위에 보입니다. 「직전 저장으로」는 바로 앞 저장으로 한 단계 되돌립니다.
 - **전용 도구 추가**: `site/private/`에 HTML을 넣고 `site/private/index.html`의 "나만 쓰는 도구" 장면에 카드를 하나 추가합니다. `/private/` 아래는 자동으로 잠깁니다.
 - 확인값: `shasum -a 256 파일.zip`
 - **웹앱 링크**: 다른 저장소에 있는 웹앱은 `apps.json`에 `"web": "https://…"`로 넣으면 「바로 열기」 카드가 됩니다(지금: 수업 3줄 메모). 공개하지 않을 웹앱은 `site/private/index.html` "나만 쓰는 도구"에 외부 링크 카드로 둡니다(전광판·모둠 편성·강의 원고).

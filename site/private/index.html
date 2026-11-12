@@ -80,6 +80,24 @@ a.card:hover{border-color:var(--text)}
 .state.off{color:var(--mark)}
 pre{margin:12px 0 0;background:var(--surface-2);border-radius:12px;padding:14px 16px;font-size:12.5px;line-height:1.5;overflow:auto;font-family:ui-monospace,Menlo,Consolas,monospace;white-space:pre-wrap;word-break:break-all}
 .block .links{display:flex;flex-wrap:wrap;gap:8px 20px;font-size:14px;margin-top:10px}
+/* 공개 대문 앱 순서·숨김 */
+.ho-list{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:6px}
+.ho-list li{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:12px;padding:6px 8px 6px 12px;background:var(--bg)}
+.ho-list li.off .ho-name{color:var(--muted);text-decoration:line-through}
+.ho-list li.changed{border-color:var(--mark)}
+.ho-n{flex:none;width:1.6em;font-size:13px;font-weight:700;color:var(--muted);font-variant-numeric:tabular-nums}
+.ho-name{flex:1;min-width:0;font-weight:600;font-size:15px;overflow-wrap:anywhere}
+.ho-name small{display:block;font-weight:500;font-size:12px;color:var(--muted)}
+.ho-list button{flex:none;width:34px;height:34px;border-radius:9px;border:1px solid var(--line);background:var(--surface);color:var(--text);font-size:15px;line-height:1;padding:0}
+.ho-list button:hover:not(:disabled){border-color:var(--text)}
+.ho-list button:disabled,.block .row .sm:disabled{opacity:.35;cursor:default}
+.ho-list label{flex:none;display:inline-flex;align-items:center;gap:5px;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;padding:0 4px}
+.ho-list input{width:17px;height:17px;margin:0}
+.sm.primary:not(:disabled){background:var(--accent);color:var(--accent-text);border-color:var(--accent)}
+#hoMsg{margin-top:10px;min-height:1.5em}
+#hoMsg.err{color:var(--mark);font-weight:600}
+#hoMsg:focus{outline:none}
+@media print{#homeorder{display:none!important}}
 .relock{margin-top:24px;border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:12px;padding:10px 16px;font-weight:600;font-size:14px}
 .relock:hover{color:var(--text);border-color:var(--text)}
 
@@ -204,6 +222,19 @@ button,summary,.seg,.nav,.pager,.brand,.cta,.btn{-webkit-user-select:none;user-s
     <section class="scene" id="admin" aria-label="관리">
       <div class="scene-head"><h2>관리</h2><p class="sub">공개용 DevApps의 잠금 상태와 배포를 확인합니다. 비밀키 값 자체는 Cloudflare에만 있어 여기서 보이지 않습니다.</p></div>
 
+      <div class="block" id="homeorder">
+        <h3>공개 대문 앱 순서 · 숨김 <span class="state" id="hoState">불러오는 중…</span></h3>
+        <p>↑ ↓로 순서를 바꾸고, 숨김을 체크하면 공개 대문 목록에서만 빠집니다(지워지지 않고, 내려받기 주소는 그대로입니다). 「저장」을 눌러야 방문자 화면에 반영됩니다.</p>
+        <ol class="ho-list" id="hoList"></ol>
+        <div class="row">
+          <button type="button" class="sm primary" id="hoSave" disabled>저장</button>
+          <button type="button" class="sm" id="hoCancel" disabled>변경 취소</button>
+          <button type="button" class="sm" id="hoRestore" disabled title="바로 앞에 저장했던 순서·숨김으로 되돌립니다">직전 저장으로</button>
+          <button type="button" class="sm" id="hoReload">다시 불러오기</button>
+        </div>
+        <p id="hoMsg" role="status"></p>
+      </div>
+
       <div class="block">
         <h3>배포 확인 <span class="sha" id="sha">확인 중…</span> <button type="button" class="sm" id="recheck">다시 확인</button></h3>
         <p>지금 사이트에 올라간 커밋입니다. 맥에서 <code>npx wrangler pages deploy</code>로 올립니다.</p>
@@ -245,6 +276,7 @@ npx wrangler pages secret put ADMIN_KEY --project-name piman-devapps</pre>
   </nav>
 </div>
 
+<script src="/arrange.js"></script>
 <script>
 const $ = s => document.querySelector(s);
 const SCENES = ['cover', 'tools', 'admin'];
@@ -270,7 +302,7 @@ $('#prev').addEventListener('click', () => go(SCENES[SCENES.indexOf(current) - 1
 $('#next').addEventListener('click', () => go(SCENES[SCENES.indexOf(current) + 1]));
 document.addEventListener('click', e => { const b = e.target.closest('[data-go]'); if (b) go(b.dataset.go); });
 document.addEventListener('keydown', e => {
-  if (!document.body.classList.contains('mode-present') || e.target.closest('input')) return;
+  if (!document.body.classList.contains('mode-present') || e.target.closest('input, #hoList')) return;
   if (e.key === 'ArrowRight') { e.preventDefault(); $('#next').click(); }
   if (e.key === 'ArrowLeft') { e.preventDefault(); $('#prev').click(); }
   if (e.key === 'Escape') go('cover');
@@ -315,6 +347,122 @@ dlState();
 $('#relock').addEventListener('click', () => {
   fetch('/api/admin', {method: 'DELETE', credentials: 'same-origin'}).finally(() => location.reload());
 });
+
+// ── 공개 대문 앱 순서·숨김 ──
+// 서버(/api/home)에는 앱 id의 순서와 숨김만 저장한다. 이름·내용은 apps.json 그대로.
+// base = 서버에 저장된 모습, draft = 화면에서 고치는 중인 모습. 둘이 다르면 「저장」이 켜진다.
+// 서버 값을 읽지 못했으면 편집을 열지 않는다(못 읽은 것을 "저장 없음"으로 알고 덮어쓰지 않게).
+(function () {
+  const list = $('#hoList'), state = $('#hoState'), msg = $('#hoMsg');
+  const bSave = $('#hoSave'), bCancel = $('#hoCancel'), bRestore = $('#hoRestore'), bReload = $('#hoReload');
+  let apps = null, base = null, draft = null, hasPrev = false, busy = false, ready = false;
+
+  const say = (t, err) => { msg.textContent = t || ''; msg.className = err ? 'err' : ''; };
+  const rows = saved => arrangeApps(apps, saved).map(x => ({ id: x.app.id, name: x.app.name, cat: x.app.category, hidden: x.hidden }));
+  const copy = a => a.map(r => ({ ...r }));
+  function changes() {
+    if (!ready) return 0;
+    const was = Object.fromEntries(base.map(r => [r.id, r.hidden]));
+    return (draft.some((r, i) => r.id !== base[i].id) ? 1 : 0) + draft.filter(r => r.hidden !== was[r.id]).length;
+  }
+  function draw() {
+    const n = changes(), lock = busy || !ready;
+    list.replaceChildren();
+    if (ready) {
+      const was = Object.fromEntries(base.map((r, i) => [r.id, { i, hidden: r.hidden }]));
+      const shown = draft.filter(r => !r.hidden).length;
+      draft.forEach((r, i) => {
+        const li = document.createElement('li'), num = document.createElement('span'), name = document.createElement('span'), cat = document.createElement('small');
+        const up = document.createElement('button'), down = document.createElement('button'), lab = document.createElement('label'), box = document.createElement('input');
+        li.className = (r.hidden ? 'off ' : '') + (was[r.id].i !== i || was[r.id].hidden !== r.hidden ? 'changed' : '');
+        num.className = 'ho-n'; num.textContent = i + 1;
+        name.className = 'ho-name'; name.textContent = r.name || r.id; cat.textContent = r.cat || ''; name.appendChild(cat);
+        up.type = down.type = 'button'; up.textContent = '↑'; down.textContent = '↓';
+        up.setAttribute('aria-label', (r.name || r.id) + ' 위로'); down.setAttribute('aria-label', (r.name || r.id) + ' 아래로');
+        up.disabled = lock || i === 0; down.disabled = lock || i === draft.length - 1;
+        up.addEventListener('click', () => move(i, -1, 'up')); down.addEventListener('click', () => move(i, 1, 'down'));
+        box.type = 'checkbox'; box.checked = r.hidden;
+        // 마지막으로 보이는 앱은 숨길 수 없다(서버도 전부 숨김은 받지 않는다)
+        box.disabled = lock || (!r.hidden && shown <= 1);
+        box.setAttribute('aria-label', (r.name || r.id) + ' 숨김');
+        box.addEventListener('change', () => {
+          r.hidden = box.checked; say(''); draw();
+          // 줄을 새로 그리므로 같은 줄의 체크박스(잠겼으면 그 줄의 다른 단추)에 초점을 돌려준다
+          const row = [...list.children].find(x => x.dataset.id === r.id), f = row && (row.querySelector('input:not(:disabled)') || row.querySelector('button:not(:disabled)'));
+          if (f) f.focus();
+        });
+        lab.append(box, document.createTextNode('숨김'));
+        li.dataset.id = r.id; li.append(num, name, up, down, lab); list.appendChild(li);
+      });
+    }
+    bSave.disabled = lock || !n; bSave.textContent = n ? `저장 (변경 ${n}건)` : '저장';
+    bCancel.disabled = lock || !n; bRestore.disabled = lock || !hasPrev; bReload.disabled = busy;
+  }
+  function move(i, d, which) {
+    if (busy || !ready || i + d < 0 || i + d >= draft.length) return;
+    const id = draft[i].id; [draft[i], draft[i + d]] = [draft[i + d], draft[i]];
+    say(''); draw();
+    // 옮긴 줄의 같은 단추에 초점을 돌려줘 키보드로 계속 옮길 수 있게
+    const row = [...list.children].find(x => x.dataset.id === id);
+    const b = row && row.querySelector(`button:nth-of-type(${which === 'up' ? 1 : 2})`);
+    if (b && !b.disabled) b.focus(); else { const o = row && row.querySelector('button:not(:disabled)'); if (o) o.focus(); }
+  }
+  function adopt(j) { // 서버가 준 값을 기준으로 삼는다
+    const saved = Array.isArray(j.order) && j.order.length ? j : null; // 빈 순서 = 고친 것 없음(파일 순서)
+    base = rows(saved); draft = copy(base); hasPrev = !!j.hasPrev; ready = true;
+    state.textContent = saved ? '저장한 순서 사용 중' : '저장 없음 · 파일 순서'; state.className = 'state ' + (saved ? 'on' : '');
+    state.title = saved && j.updated_at ? '마지막 저장 ' + new Date(j.updated_at).toLocaleString('ko-KR') : '';
+  }
+  function blocked(t) { ready = false; state.textContent = '불러오지 못함'; state.className = 'state off'; say(t, true); draw(); }
+
+  async function load() {
+    if (busy) return;
+    busy = true; ready = false; state.textContent = '불러오는 중…'; state.className = 'state'; say(''); draw();
+    try {
+      const [a, h] = await Promise.all([
+        fetch('/apps.json', {cache: 'no-store'}).then(r => r.ok ? r.json() : null),
+        fetch('/api/home', {cache: 'no-store', credentials: 'same-origin'}).then(r => r.json().catch(() => null)),
+      ]);
+      busy = false;
+      if (!a || !Array.isArray(a.apps) || !a.apps.length) return blocked('앱 목록(apps.json)을 읽지 못했습니다. 「다시 불러오기」를 눌러 주세요.');
+      if (!h || !h.ok) return blocked(h && h.error === 'not-configured' ? '저장소(KV)가 연결되지 않아 순서를 저장할 수 없습니다.' : '서버에 저장된 순서를 읽지 못해 편집을 막았습니다. 잠시 뒤 「다시 불러오기」를 눌러 주세요.');
+      // 서버(lib/home.js sanitize)와 같은 기준: id 형식, 중복 없음, 100개까지. 어긋나면 저장이 매번 거절되므로 미리 알린다.
+      const seen = new Set(), bad = a.apps.find(x => !x || typeof x.id !== 'string' || !/^[a-z0-9][a-z0-9-]{0,39}$/.test(x.id) || seen.has(x.id) || !seen.add(x.id));
+      if (bad !== undefined) return blocked('apps.json의 앱 id "' + (bad && bad.id) + '"를 고쳐야 순서를 저장할 수 있습니다(영문 소문자·숫자·- 만, 40자까지, 겹치지 않게).');
+      if (a.apps.length > 100) return blocked('앱이 100개를 넘어 순서를 저장할 수 없습니다.');
+      apps = a.apps; adopt(h); draw();
+    } catch { busy = false; blocked('연결이 끊겼습니다. 잠시 뒤 「다시 불러오기」를 눌러 주세요.'); }
+  }
+  async function send(body, done) {
+    if (busy || !ready) return;
+    busy = true; say('저장하는 중…'); draw();
+    let r = null, j = null;
+    try {
+      r = await fetch('/api/home', {method: 'PUT', credentials: 'same-origin', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)});
+      j = await r.json().catch(() => null);
+    } catch {}
+    busy = false;
+    if (r && r.ok && j && j.ok) { adopt(j); say(done); }
+    else if (!r) say('연결이 끊겨 저장하지 못했습니다. 고친 내용은 그대로 있으니 다시 「저장」을 눌러 주세요.', true);
+    else if (r.status === 401) say('관리자 키가 풀려 저장하지 못했습니다. 이 화면은 그대로 두고, 새 탭에서 /private/ 을 열어 키를 다시 넣은 뒤 여기서 「저장」을 다시 눌러 주세요. 고친 내용은 그대로 있습니다.', true);
+    else if (r.status === 404) { hasPrev = false; say('되돌릴 직전 저장이 없습니다.', true); }
+    else if (r.status === 400) say('서버가 이 순서를 받지 않았습니다(형식 오류). 「다시 불러오기」 뒤 다시 해 주세요.', true);
+    else say('저장하지 못했습니다(' + r.status + '). 고친 내용은 그대로 있으니 잠시 뒤 다시 「저장」을 눌러 주세요.', true);
+    draw();
+    // 누른 단추가 꺼지면서 초점이 사라지지 않게 결과 문구로 옮긴다
+    if (!document.activeElement || document.activeElement === document.body || document.activeElement.disabled) { msg.tabIndex = -1; msg.focus({preventScroll: true}); }
+  }
+  bSave.addEventListener('click', () => send({ order: draft.map(r => r.id), hidden: draft.filter(r => r.hidden).map(r => r.id) }, '저장했습니다. 공개 대문에는 길어도 1분 안에 반영됩니다.'));
+  bCancel.addEventListener('click', () => { if (busy || !ready) return; draft = copy(base); say('고치던 내용을 버렸습니다.'); draw(); });
+  bRestore.addEventListener('click', () => {
+    if (busy || !ready) return;
+    if (!confirm(changes() ? '직전에 저장했던 순서·숨김으로 되돌립니다. 지금 고치던 내용은 사라집니다. 계속할까요?' : '직전에 저장했던 순서·숨김으로 되돌릴까요? 한 번 더 누르면 다시 지금 것으로 돌아옵니다.')) return;
+    send({ restore: true }, '직전 저장으로 되돌렸습니다.');
+  });
+  bReload.addEventListener('click', () => { if (changes() && !confirm('고치던 내용을 버리고 서버 값을 다시 불러올까요?')) return; load(); });
+  window.addEventListener('beforeunload', e => { if (changes()) { e.preventDefault(); e.returnValue = ''; } });
+  load();
+})();
 // ── 넘겨 보기 보강(2026-11-11): 방향 전환·진행 막대·숫자 키·쓸어 넘기기·쪽 넘기기·카드 기울기 ──
 (function () {
   const present = () => document.body.classList.contains('mode-present');

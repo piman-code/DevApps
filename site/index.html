@@ -277,6 +277,7 @@ button,summary,.seg,.nav,.pager,.brand,.cta,.btn{-webkit-user-select:none;user-s
   </form>
 </dialog>
 
+<script src="/arrange.js"></script>
 <script>
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -312,7 +313,15 @@ function render() {
   }).join('');
 }
 
-fetch('apps.json', {cache: 'no-cache'}).then(r => r.json()).then(json => {
+// 관리자가 저장한 순서·숨김(/api/home, 전용 대문의 「관리」에서 고친다). 저장이 없거나 못 읽거나 3초 안에 답이 없으면 apps.json 순서 그대로.
+const savedHome = Promise.race([
+  fetch('/api/home', {cache: 'no-store'}).then(r => r.ok ? r.json() : null).catch(() => null),
+  new Promise(done => setTimeout(() => done(null), 3000)),
+]);
+Promise.all([fetch('apps.json', {cache: 'no-cache'}).then(r => r.json()), savedHome]).then(([json, home]) => {
+  if (typeof arrangeApps === 'function') {
+    json.apps = arrangeApps(json.apps, home && home.ok && Array.isArray(home.order) ? home : null).filter(x => !x.hidden).map(x => x.app);
+  }
   data = json;
   document.title = json.site.title;
   $('#title').textContent = json.site.title;
