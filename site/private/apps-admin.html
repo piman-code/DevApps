@@ -66,19 +66,35 @@ h1{font-size:clamp(24px,4vw,30px);margin:10px 0 4px;letter-spacing:-.02em;displa
 @media (max-width:560px){.hint{grid-column:1}}
 .empty{color:var(--muted);font-size:14.5px}
 input[type=checkbox]{width:17px;height:17px;margin:0}
+/* 파일 올리기 */
+.quota{font-size:13px;font-weight:600;color:var(--muted)}
+.quota.warn{color:var(--mark)}
+#up{flex:1 1 100%;display:flex;flex-wrap:wrap;align-items:center;gap:10px;font-size:14px}
+#up progress{flex:1;min-width:140px;height:10px;accent-color:var(--text)}
+.filebox{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:9px 11px;border:1px solid var(--line);border-radius:10px;background:var(--bg);font-size:14px;min-width:0}
+.filebox b{font-weight:700;overflow-wrap:anywhere}
+.filebox small{color:var(--muted)}
+.drop{outline:2px dashed var(--text);outline-offset:4px;border-radius:12px}
+.files{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:6px}
+.files li{display:flex;flex-wrap:wrap;align-items:center;gap:8px;border:1px solid var(--line);border-radius:12px;padding:8px 12px;background:var(--bg);font-size:14px}
+.files .nm{flex:1;min-width:0;overflow-wrap:anywhere;font-weight:600}
+.files .nm small{display:block;font-weight:500;font-size:12px;color:var(--muted)}
+.tag{flex:none;font-size:11.5px;font-weight:700;border-radius:999px;padding:1px 8px;border:1px solid var(--line);color:var(--muted)}
+.tag.on{color:var(--ok);border-color:var(--ok)}
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="top"><a href="/private/#tools">← 파이맨 전용</a><a href="/#apps" target="_blank" rel="noopener">공개 대문 앱 목록 ↗</a><a href="/private/#admin">순서 · 숨김 →</a></div>
-  <h1>앱 관리 <span class="state" id="state">불러오는 중…</span></h1>
-  <p class="sub">공개 대문의 앱 카드 내용과 내려받기 링크를 고칩니다. 「저장」을 눌러야 반영되고, 배포는 필요 없습니다. 설치 파일은 지금처럼 구글 드라이브에 올리고 그 공유 링크를 여기에 넣습니다. 링크는 다운로드 비밀키를 넣은 선생님에게만 나갑니다.</p>
+  <h1>앱 관리 <span class="state" id="state">불러오는 중…</span> <span class="quota" id="quota"></span></h1>
+  <p class="sub">공개 대문의 앱 카드 내용과 내려받기 링크를 고칩니다. 「저장」을 눌러야 반영되고, 배포는 필요 없습니다. 설치 파일은 여기에 직접 올리거나, 구글 드라이브에 올리고 그 공유 링크를 넣습니다. 파일과 링크는 다운로드 비밀키를 넣은 선생님에게만 나갑니다.</p>
 
   <div class="bar">
     <button type="button" class="sm primary" id="save" disabled>저장</button>
     <button type="button" class="sm" id="cancel" disabled>변경 취소</button>
     <button type="button" class="sm" id="restore" disabled title="바로 앞에 저장했던 내용과 링크로 되돌립니다">직전 저장으로</button>
     <button type="button" class="sm" id="reload">다시 불러오기</button>
+    <div id="up" hidden><span id="uptext"></span><progress id="upbar" max="100" value="0"></progress><button type="button" class="sm" id="upcancel">올리기 취소</button></div>
     <p id="msg" role="status"></p>
   </div>
 
@@ -93,13 +109,19 @@ input[type=checkbox]{width:17px;height:17px;margin:0}
 // base = 서버에 저장된 모습, draft = 고치는 중인 모습. 둘이 다르면 「저장」이 켜진다.
 // 검사는 서버와 같은 파일(catalog-rules.js)로 한다. 서버 값을 못 읽었으면 편집을 열지 않는다.
 // 화면에 넣는 글자는 모두 textContent / value 로만 넣는다.
-import { sanitizeCatalog, OSES, FOLDER, ID, LIMITS } from './catalog-rules.js';
+import { sanitizeCatalog, OSES, FOLDER, ID, LIMITS, R2, r2Key } from './catalog-rules.js';
 
 const $ = s => document.querySelector(s);
 const el = (tag, cls, text) => { const x = document.createElement(tag); if (cls) x.className = cls; if (text != null) x.textContent = text; return x; };
 const list = $('#list'), panel = $('#panel'), state = $('#state'), msg = $('#msg');
 const bSave = $('#save'), bCancel = $('#cancel'), bRestore = $('#restore'), bReload = $('#reload');
 const OS_NAME = { windows: 'Windows', mac: 'Mac' };
+const FILES = '__files'; // 왼쪽 목록의 「올린 파일」 칸
+const quota = $('#quota'), upBox = $('#up'), upText = $('#uptext'), upBar = $('#upbar'), upCancel = $('#upcancel');
+// store = 올린 파일 저장소(R2) 상태: null(아직 모름) | { off: true }(연결 안 됨·못 읽음) | { used, limit, maxFile, part, exts, files }
+let store = null, uploading = null; // uploading = { cancel: false } 올리는 중
+const fmtSize = n => (n >= 1024 ** 3 ? (n / 1024 ** 3).toFixed(n >= 10 * 1024 ** 3 ? 0 : 1) + 'GB' : Math.max(1, Math.round(n / 1024 / 1024)) + 'MB');
+const nameOfKey = key => key.split('/').pop().replace(/^[0-9]{14}-/, '');
 
 let fileApps = null, base = null, draft = null, hasPrev = false, busy = false, ready = false, cur = null, orphans = [];
 const fresh = new Set(); // 이번에 새로 넣은 앱의 id(저장 전까지만 id를 고칠 수 있다)
@@ -170,6 +192,19 @@ function drawList() {
   f.type = 'button'; f.disabled = busy; f.setAttribute('aria-current', String(cur === FOLDER));
   nm.appendChild(el('small', null, '공개 대문 마지막 장면의 링크'));
   f.append(nm); f.addEventListener('click', () => select(FOLDER)); li.appendChild(f); list.appendChild(li);
+  if (store && !store.off) {
+    const li2 = el('li'), u = el('button'), nm2 = el('span', 'nm', '올린 파일');
+    u.type = 'button'; u.disabled = busy; u.setAttribute('aria-current', String(cur === FILES));
+    nm2.appendChild(el('small', null, store.files.length + '개 · ' + fmtSize(store.used) + ' / ' + fmtSize(store.limit)));
+    u.append(nm2); u.addEventListener('click', () => select(FILES)); li2.appendChild(u); list.appendChild(li2);
+  }
+}
+function drawQuota() {
+  if (!store) { quota.textContent = ''; return; }
+  if (store.off) { quota.textContent = '파일 올리기 꺼짐(드라이브 링크만)'; quota.className = 'quota'; quota.title = store.why || ''; return; }
+  quota.textContent = '올린 파일 ' + fmtSize(store.used) + ' / ' + fmtSize(store.limit);
+  quota.className = 'quota' + (store.used > store.limit * 0.85 ? ' warn' : '');
+  quota.title = '무료 한도(10GB)를 넘지 않게 ' + fmtSize(store.limit) + '에서 올리기를 막습니다.';
 }
 function drawBar() {
   const n = changedIds().length, lock = busy || !ready;
@@ -207,6 +242,7 @@ function drawPanel(focusId) {
     });
     return;
   }
+  if (cur === FILES && store && !store.off) { drawFiles(); return; }
   const a = draft.apps.find(x => x.id === cur);
   if (!a) { panel.appendChild(el('p', 'empty', '왼쪽에서 앱을 고르거나 「＋ 앱 추가」를 누르세요.')); return; }
   const isNew = fresh.has(a.id), h = el('h2', null, a.name || '(이름 없음)'), del = el('button', 'sm danger', '이 앱 지우기');
@@ -264,12 +300,143 @@ function drawPanel(focusId) {
       field(g2, '확인값(SHA256)', '선택. 터미널에서 shasum -a 256 파일.zip 으로 나온 64자.', { mono: true, max: 64, value: b.sha256, set: v => { b.sha256 = v; } });
       field(g2, '실행 방법', '선택. 이 운영체제에서만 다르게 안내할 때.', { max: LIMITS.start, value: b.start, set: v => { b.start = v; } });
     }
-    field(g2, '내려받기 링크', b ? '구글 드라이브 공유 링크("링크가 있는 모든 사용자 · 뷰어"). 비우면 다운로드를 눌러도 받을 수 없습니다.' : '위 「있음」을 체크하고 버전·크기를 적어야 대문에 다운로드 단추가 생깁니다.', {
-      type: 'url', mono: true, max: LIMITS.url, placeholder: 'https://drive.google.com/…', value: str(draft.links[linkKey(a.id, os)]), set: v => { draft.links[linkKey(a.id, os)] = v; },
-    });
+    const lk = linkKey(a.id, os), mine = r2Key(str(draft.links[lk]), a.id, os);
+    if (str(draft.links[lk]).startsWith(R2)) {
+      // 사이트에 올린 파일을 쓰는 중
+      const lab = el('label', null, '내려받기'), box = el('div', 'filebox'), info = store && !store.off && mine ? store.files.find(x => x.key === mine) : null;
+      box.append(el('b', null, mine ? nameOfKey(mine) : '(알 수 없는 파일)'), el('small', null, '사이트에 올린 파일' + (info ? ' · ' + fmtSize(info.size) : '')));
+      const sw = el('button', 'sm', '드라이브 링크로 바꾸기'); sw.type = 'button'; sw.style.marginLeft = 'auto';
+      sw.addEventListener('click', () => { draft.links[lk] = ''; drawPanel(); touched(); say('링크 칸을 비웠습니다. 드라이브 링크를 넣거나 파일을 다시 올려 주세요. 올린 파일은 「올린 파일」 목록에 남아 있습니다.'); });
+      box.appendChild(sw); g2.append(lab, box);
+      g2.appendChild(el('p', 'hint', '다운로드를 누르면 드라이브를 거치지 않고 바로 받습니다. 새 버전은 아래에서 다시 올리면 바뀝니다.'));
+    } else {
+      field(g2, '내려받기 링크', b ? '구글 드라이브 공유 링크("링크가 있는 모든 사용자 · 뷰어"). 비우면 다운로드를 눌러도 받을 수 없습니다.' : '위 「있음」을 체크하고 버전·크기를 적어야 대문에 다운로드 단추가 생깁니다.', {
+        type: 'url', mono: true, max: LIMITS.url, placeholder: 'https://drive.google.com/…', value: str(draft.links[lk]), set: v => { draft.links[lk] = v; },
+      });
+    }
+    if (store && !store.off) {
+      const lab = el('label', null, '파일 올리기'), row = el('div', 'pair'), pick = el('input'), btn = el('button', 'sm', '파일 고르기');
+      pick.type = 'file'; pick.hidden = true; pick.accept = store.exts.map(x => '.' + x).join(',');
+      btn.type = 'button'; btn.addEventListener('click', () => pick.click());
+      pick.addEventListener('change', () => { if (pick.files[0]) upload(a.id, os, pick.files[0]); });
+      row.append(btn, pick); g2.append(lab, row);
+      g2.appendChild(el('p', 'hint', store.exts.join('·') + ' 파일, 하나에 ' + fmtSize(store.maxFile) + '까지. 이 칸으로 끌어다 놓아도 됩니다. 올리면 크기와 확인값이 자동으로 채워집니다.'));
+      g2.addEventListener('dragover', e => { if (!busy) { e.preventDefault(); g2.classList.add('drop'); } });
+      g2.addEventListener('dragleave', () => g2.classList.remove('drop'));
+      g2.addEventListener('drop', e => { e.preventDefault(); g2.classList.remove('drop'); const f = e.dataTransfer && e.dataTransfer.files[0]; if (f && !busy) upload(a.id, os, f); });
+    }
   }
   if (focusId) { const f = document.getElementById(focusId); if (f) f.focus(); }
 }
+
+// 「올린 파일」: 버킷에 있는 파일 전부. 지금 저장본이 쓰는 파일은 지울 수 없다(서버도 거절한다).
+function drawFiles() {
+  panel.appendChild(el('h2', null, '올린 파일'));
+  panel.appendChild(el('p', 'sub', '사이트에 올려 둔 설치 파일입니다. ' + fmtSize(store.used) + ' / ' + fmtSize(store.limit) + ' 사용 중. 한도에 닿으면 올리기가 막히니, 쓰지 않는 옛 버전은 지워 주세요. 지운 파일은 되돌릴 수 없습니다.'));
+  if (!store.files.length) { panel.appendChild(el('p', 'empty', '아직 올린 파일이 없습니다. 앱을 고른 뒤 Windows/Mac 칸의 「파일 고르기」로 올립니다.')); return; }
+  const inDraft = new Set(Object.values(draft.links).map(v => r2Key(str(v))).filter(Boolean));
+  const ul = el('ul', 'files');
+  [...store.files].sort((x, y) => (x.key < y.key ? -1 : 1)).forEach(f => {
+    const li = el('li'), nm = el('span', 'nm', nameOfKey(f.key)), m = /^apps\/([^/]+)\/([^/]+)\//.exec(f.key);
+    nm.appendChild(el('small', null, (m ? m[1] + ' · ' + (OS_NAME[m[2]] || m[2]) + ' · ' : '') + fmtSize(f.size) + (f.uploaded ? ' · ' + new Date(f.uploaded).toLocaleDateString('ko-KR') : '')));
+    li.appendChild(nm);
+    if (f.inUse) li.appendChild(el('span', 'tag on', '쓰는 중'));
+    else if (inDraft.has(f.key)) li.appendChild(el('span', 'tag', '저장하면 쓰임'));
+    else if (f.inPrev) li.appendChild(el('span', 'tag', '직전 저장에서 씀'));
+    else li.appendChild(el('span', 'tag', '쓰지 않음'));
+    const del = el('button', 'sm danger', '지우기'); del.type = 'button'; del.disabled = f.inUse || inDraft.has(f.key);
+    del.title = f.inUse ? '지금 선생님이 받는 파일입니다. 먼저 그 앱의 링크를 바꿔 저장해 주세요.' : inDraft.has(f.key) ? '고치는 중인 내용이 이 파일을 가리킵니다.' : '';
+    del.addEventListener('click', () => removeFile(f));
+    li.appendChild(del); ul.appendChild(li);
+  });
+  panel.appendChild(ul);
+}
+async function loadStore() {
+  try {
+    const r = await fetch('/api/files', { cache: 'no-store', credentials: 'same-origin' }), j = await r.json().catch(() => null);
+    if (r.ok && j && j.ok) store = j;
+    else store = { off: true, why: j && j.error === 'not-configured' ? 'R2 저장소가 연결되지 않았습니다.' : '올린 파일 목록을 읽지 못했습니다. 「다시 불러오기」를 눌러 보세요.' };
+  } catch { store = { off: true, why: '연결이 끊겼습니다.' }; }
+  drawQuota(); if (ready) { drawList(); drawPanel(); }
+}
+async function removeFile(f) {
+  if (busy) return;
+  if (!confirm('「' + nameOfKey(f.key) + '」(' + fmtSize(f.size) + ') 파일을 지울까요? 지우면 되돌릴 수 없습니다.' + (f.inPrev ? '\n\n직전 저장본이 이 파일을 가리킵니다. 지운 뒤 「직전 저장으로」 되돌리면 그 앱은 받을 수 없게 됩니다.' : ''))) return;
+  busy = true; say('지우는 중…'); drawList(); drawBar();
+  let r = null, j = null;
+  try { r = await fetch('/api/files?key=' + encodeURIComponent(f.key), { method: 'DELETE', credentials: 'same-origin' }); j = await r.json().catch(() => null); } catch {}
+  busy = false;
+  if (r && r.ok && j && j.ok) say('지웠습니다.');
+  else say(!r ? '연결이 끊겨 지우지 못했습니다.' : r.status === 401 ? '관리자 키가 풀렸습니다. 새 탭에서 /private/ 을 열어 키를 다시 넣은 뒤 다시 해 주세요.' : r.status === 409 ? '지금 저장본이 쓰는 파일이라 지울 수 없습니다. 먼저 그 앱의 링크를 바꿔 저장해 주세요.' : '지우지 못했습니다(' + r.status + ').', true);
+  await loadStore(); drawList(); drawPanel(); drawBar();
+}
+// 파일 올리기: 확인값을 계산하고 → 조각으로 나눠 올리고 → 합친다. 끝나면 그 OS의 링크·크기·확인값을 채운다(저장은 따로).
+async function upload(id, os, file) {
+  if (busy || !ready || !store || store.off) return;
+  const a = draft.apps.find(x => x.id === id);
+  if (!a) return;
+  const ext = (file.name.split('.').pop() || '').toLowerCase();
+  if (!store.exts.includes(ext)) return say('올릴 수 있는 파일은 ' + store.exts.join('·') + ' 입니다. 다른 형식은 zip으로 묶어 올려 주세요.', true);
+  if (file.size < 1) return say('빈 파일은 올릴 수 없습니다.', true);
+  if (file.size > store.maxFile) return say('파일 하나는 ' + fmtSize(store.maxFile) + '까지입니다. 이 파일은 드라이브 링크로 넣어 주세요.', true);
+  if (store.used + file.size > store.limit) return say('올린 파일이 한도(' + fmtSize(store.limit) + ')를 넘게 됩니다. 「올린 파일」에서 옛 버전을 지우거나, 이 파일은 드라이브 링크로 넣어 주세요.', true);
+  const job = { cancel: false }; uploading = job; busy = true;
+  upBox.hidden = false; upBar.value = 0; upText.textContent = file.name + ' · 확인값 계산 중…'; say(''); drawList(); drawBar();
+  const api = (method, url, body, raw) => fetch(url, { method, credentials: 'same-origin', headers: raw ? {} : { 'Content-Type': 'application/json' }, body: raw ? body : JSON.stringify(body) })
+    .then(async r => ({ status: r.status, j: await r.json().catch(() => null) })).catch(() => ({ status: 0, j: null }));
+  let started = null, fail = '';
+  try {
+    // 확인값(SHA256): 파일을 통째로 읽어 계산한다. 1GB를 넘으면 건너뛴다(직접 적을 수 있다).
+    let sha = '';
+    if (file.size <= 1024 ** 3 && crypto.subtle) {
+      const d = new Uint8Array(await crypto.subtle.digest('SHA-256', await file.arrayBuffer()));
+      sha = [...d].map(x => x.toString(16).padStart(2, '0')).join('');
+    }
+    if (job.cancel) throw new Error('cancel');
+    const s = await api('POST', '/api/files', { action: 'start', app: id, os, name: file.name, size: file.size });
+    if (s.status !== 200 || !s.j || !s.j.ok) {
+      fail = s.status === 401 ? '관리자 키가 풀렸습니다. 새 탭에서 /private/ 을 열어 키를 다시 넣은 뒤 다시 올려 주세요.'
+        : s.j && s.j.error === 'quota' ? '올린 파일이 한도를 넘게 됩니다. 「올린 파일」에서 옛 버전을 지우거나, 이 파일은 드라이브 링크로 넣어 주세요.'
+        : s.j && s.j.error === 'too-large' ? '파일 하나는 ' + fmtSize(store.maxFile) + '까지입니다.'
+        : s.j && s.j.error === 'bad-name' ? '이 파일 이름·형식은 올릴 수 없습니다.' : '올리기를 시작하지 못했습니다(' + (s.status || '연결 끊김') + ').';
+      throw new Error('start');
+    }
+    started = { key: s.j.key, uploadId: s.j.uploadId, size: s.j.size, sig: s.j.sig };
+    const who = '/api/files?key=' + encodeURIComponent(started.key) + '&uploadId=' + encodeURIComponent(started.uploadId) + '&size=' + started.size + '&sig=' + started.sig;
+    const size = s.j.part, count = Math.ceil(file.size / size), parts = [];
+    for (let n = 1; n <= count; n++) {
+      if (job.cancel) throw new Error('cancel');
+      const blob = file.slice((n - 1) * size, Math.min(n * size, file.size));
+      let ok = null;
+      for (let t = 0; t < 3 && !ok; t++) { // 조각 하나가 실패하면 두 번 더 해 본다
+        const r = await api('PUT', who + '&part=' + n, blob, true);
+        if (r.status === 200 && r.j && r.j.ok) ok = r.j;
+        else if (r.status === 401) { fail = '올리는 중에 관리자 키가 풀렸습니다. 새 탭에서 /private/ 을 열어 키를 다시 넣은 뒤 다시 올려 주세요.'; throw new Error('part'); }
+        if (job.cancel) throw new Error('cancel');
+      }
+      if (!ok) { fail = '올리는 중에 연결이 끊겼습니다. 다시 올려 주세요.'; throw new Error('part'); }
+      parts.push({ partNumber: ok.partNumber, etag: ok.etag });
+      upBar.value = Math.round(n / count * 100); upText.textContent = file.name + ' · ' + fmtSize(Math.min(n * size, file.size)) + ' / ' + fmtSize(file.size);
+    }
+    const c = await api('POST', '/api/files', { action: 'complete', ...started, parts });
+    if (c.status !== 200 || !c.j || !c.j.ok) { fail = c.j && c.j.error === 'quota' ? '올린 파일이 한도를 넘어 받지 않았습니다.' : '올린 조각을 합치지 못했습니다(' + (c.status || '연결 끊김') + '). 다시 올려 주세요.'; if (c.status === 409 || c.status === 413) started = null; throw new Error('complete'); }
+    started = null;
+    // 화면에 반영(저장은 따로): 링크를 올린 파일로, 크기·확인값을 채운다
+    if (!a[os]) a[os] = { version: '', size: '', sha256: '', start: '' };
+    a[os].size = fmtSize(file.size); if (sha) a[os].sha256 = sha;
+    draft.links[linkKey(id, os)] = R2 + c.j.key;
+    fail = '';
+  } catch (e) {
+    if (started) await api('POST', '/api/files', { action: 'abort', ...started }); // 올리다 만 조각 정리
+    if (!fail) fail = job.cancel ? '올리기를 취소했습니다.' : '올리지 못했습니다. 다시 해 주세요.';
+  }
+  uploading = null; busy = false; upBox.hidden = true;
+  await loadStore();
+  cur = id; drawList(); drawPanel(); drawBar();
+  if (fail) say(fail, !job.cancel);
+  else say('「' + file.name + '」을 올렸습니다. ' + (a[os].version ? '' : '버전을 적고 ') + '「저장」을 눌러야 방문자에게 반영됩니다.');
+}
+upCancel.addEventListener('click', () => { if (uploading) { uploading.cancel = true; upText.textContent = '취소하는 중…'; } });
 
 function select(id) { cur = id; drawList(); drawPanel(); }
 function addApp() {
@@ -298,7 +465,7 @@ function adopt(j) {
     else orphans.push(k);
   }
   draft = copy(base); hasPrev = !!j.hasPrev; ready = true; fresh.clear();
-  if (cur !== FOLDER && !draft.apps.some(a => a.id === cur)) cur = draft.apps.length ? draft.apps[0].id : FOLDER;
+  if (cur !== FOLDER && cur !== FILES && !draft.apps.some(a => a.id === cur)) cur = draft.apps.length ? draft.apps[0].id : FOLDER;
   state.textContent = saved ? '저장본 사용 중' : '저장 없음 · apps.json과 LINKS 사용 중'; state.className = 'state ' + (saved ? 'on' : '');
   state.title = saved && j.updated_at ? '마지막 저장 ' + new Date(j.updated_at).toLocaleString('ko-KR') : '';
   drawList(); drawPanel(); drawBar();
@@ -320,7 +487,7 @@ async function load() {
     if (r.status === 401) return blocked('관리자 키가 풀렸습니다. 이 화면을 새로 고쳐 키를 다시 넣어 주세요.');
     if (!j || !j.ok) return blocked(j && j.error === 'not-configured' ? '저장소(KV)가 연결되지 않아 고칠 수 없습니다.' : '서버에 저장된 내용을 읽지 못해 편집을 막았습니다. 잠시 뒤 「다시 불러오기」를 눌러 주세요.');
     if (!a || !Array.isArray(a.apps) || !a.apps.length) return blocked('기본 앱 목록(apps.json)을 읽지 못했습니다. 「다시 불러오기」를 눌러 주세요.');
-    fileApps = a.apps; adopt(j);
+    fileApps = a.apps; adopt(j); loadStore();
   } catch { busy = false; blocked('연결이 끊겼습니다. 잠시 뒤 「다시 불러오기」를 눌러 주세요.'); }
 }
 async function send(body, done) {
@@ -332,7 +499,7 @@ async function send(body, done) {
     j = await r.json().catch(() => null);
   } catch {}
   busy = false;
-  if (r && r.ok && j && j.ok) { adopt(j); say(done + (orphans.length ? ' ' + orphanNote() : '')); }
+  if (r && r.ok && j && j.ok) { adopt(j); say(done + (orphans.length ? ' ' + orphanNote() : '')); loadStore(); }
   else {
     if (!r) say('연결이 끊겨 저장하지 못했습니다. 고친 내용은 그대로 있으니 다시 「저장」을 눌러 주세요.', true);
     else if (r.status === 401) say('관리자 키가 풀려 저장하지 못했습니다. 이 화면은 그대로 두고, 새 탭에서 /private/ 을 열어 키를 다시 넣은 뒤 여기서 「저장」을 다시 눌러 주세요. 고친 내용은 그대로 있습니다.', true);
@@ -357,14 +524,14 @@ bSave.addEventListener('click', () => {
   if (loose.length && !confirm('버전 정보와 링크의 짝이 맞지 않는 앱이 있습니다.\n\n' + loose.join('\n') + '\n\n이대로 저장할까요? (링크가 없으면 다운로드를 눌러도 받을 수 없고, 정보가 없으면 "준비 중"으로 보입니다.)')) return;
   send(body, '저장했습니다. 공개 대문과 내려받기에는 길어도 1분 안에 반영됩니다.');
 });
-bCancel.addEventListener('click', () => { if (busy || !ready) return; draft = copy(base); fresh.clear(); if (cur !== FOLDER && !draft.apps.some(a => a.id === cur)) cur = draft.apps[0].id; say('고치던 내용을 버렸습니다.'); drawList(); drawPanel(); drawBar(); });
+bCancel.addEventListener('click', () => { if (busy || !ready) return; draft = copy(base); fresh.clear(); if (cur !== FOLDER && cur !== FILES && !draft.apps.some(a => a.id === cur)) cur = draft.apps[0].id; say('고치던 내용을 버렸습니다.'); drawList(); drawPanel(); drawBar(); });
 bRestore.addEventListener('click', () => {
   if (busy || !ready) return;
   if (!confirm((changedIds().length ? '지금 고치던 내용은 사라집니다. ' : '') + '직전에 저장했던 앱 내용과 링크로 되돌릴까요? 한 번 더 누르면 다시 지금 것으로 돌아옵니다.')) return;
   send({ restore: true }, '직전 저장으로 되돌렸습니다.');
 });
 bReload.addEventListener('click', () => { if (changedIds().length && !confirm('고치던 내용을 버리고 서버 값을 다시 불러올까요?')) return; load(); });
-window.addEventListener('beforeunload', e => { if (changedIds().length) { e.preventDefault(); e.returnValue = ''; } });
+window.addEventListener('beforeunload', e => { if (changedIds().length || uploading) { e.preventDefault(); e.returnValue = ''; } });
 load();
 </script>
 </body>

@@ -104,7 +104,19 @@ export function sanitizeApps(list) {
   return { ok: true, value: apps };
 }
 
-// 내려받기 링크. 키는 '<앱 id>:windows|mac' 또는 'folder', 앱 id는 ids(보낸 앱 목록의 id)에 있는 것만. 값은 https 주소만.
+// 사이트에 올린 파일(R2 버킷)을 가리키는 링크 값: 'r2:apps/<앱 id>/<os>/<올린 시각 14자리>-<파일 이름>'
+// 파일 이름은 서버(lib/files.js)가 영문·숫자·.-_ 로 정리해 정한다.
+export const R2 = 'r2:';
+export const R2_KEY = /^apps\/([a-z0-9][a-z0-9-]{0,39})\/(windows|mac)\/[0-9]{14}-[A-Za-z0-9._-]{1,80}$/;
+// 그 앱·그 os의 올린 파일을 가리키는 값이면 key를, 아니면 null(다른 앱·다른 os의 파일은 가리킬 수 없다).
+export function r2Key(v, id, os) {
+  if (typeof v !== 'string' || !v.startsWith(R2)) return null;
+  const key = v.slice(R2.length), m = R2_KEY.exec(key);
+  return m && (id === undefined || (m[1] === id && m[2] === os)) ? key : null;
+}
+
+// 내려받기 링크. 키는 '<앱 id>:windows|mac' 또는 'folder', 앱 id는 ids(보낸 앱 목록의 id)에 있는 것만.
+// 값은 https 주소이거나, 그 앱·그 os의 올린 파일('r2:…'). folder는 https 주소만.
 export function sanitizeLinks(links, ids) {
   if (!plain(links)) return fail('링크의 모양이 맞지 않습니다.');
   const keys = Object.keys(links), known = new Set(ids), out = {};
@@ -114,6 +126,12 @@ export function sanitizeLinks(links, ids) {
       const cut = key.lastIndexOf(':'), id = key.slice(0, cut), os = key.slice(cut + 1);
       if (cut < 1 || !OSES.includes(os) || !ID.test(id)) return fail(`링크 이름 "${key}"이(가) 맞지 않습니다.`);
       if (!known.has(id)) return fail(`"${id}" 앱이 목록에 없는데 그 링크가 있습니다.`);
+    }
+    if (key !== FOLDER && typeof links[key] === 'string' && links[key].startsWith(R2)) {
+      const cut = key.lastIndexOf(':');
+      if (!r2Key(links[key], key.slice(0, cut), key.slice(cut + 1))) return fail(`${key}의 올린 파일 이름이 맞지 않습니다(그 앱·그 운영체제로 올린 파일만 쓸 수 있습니다).`, ids.indexOf(key.slice(0, cut)));
+      out[key] = links[key];
+      continue;
     }
     const url = httpsUrl(links[key]);
     if (!url) return fail(`${key === FOLDER ? '전체 파일 폴더' : key} 링크는 https:// 로 시작하는 주소여야 합니다(공백·따옴표 없이, ${LIMITS.url}자까지).`, key === FOLDER ? -1 : ids.indexOf(key.slice(0, key.lastIndexOf(':'))));

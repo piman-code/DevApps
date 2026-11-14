@@ -11,3 +11,9 @@ compatibility_date = "2026-10-01"
 [[kv_namespaces]]
 binding = "ORDERS"
 id = "602820cffdfa4944acc84ea7da1103c3"
+
+# 설치 파일 직접 올리기(「앱 관리」 화면, /api/files). 버킷은 비공개로 두고 공개 주소(r2.dev)는 켜지 않는다.
+# 파일은 /api/get(다운로드 잠금 뒤)으로만 나간다. 무료 한도를 넘지 않게 lib/files.js가 8GB에서 올리기를 막는다.
+[[r2_buckets]]
+binding = "FILES"
+bucket_name = "piman-devapps-files"
