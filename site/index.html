@@ -319,6 +319,11 @@ const savedHome = Promise.race([
   new Promise(done => setTimeout(() => done(null), 3000)),
 ]);
 Promise.all([fetch('apps.json', {cache: 'no-cache'}).then(r => r.json()), savedHome]).then(([json, home]) => {
+  // 전용 대문 「앱 관리」에서 저장한 앱 내용이 있으면 apps.json 대신 그것을 쓴다(서버가 형식을 검사해 저장한 값).
+  if (home && home.ok && Array.isArray(home.apps) && home.apps.length) {
+    json.apps = home.apps;
+    if (typeof home.updated === 'string' && home.updated) json.site.updated = home.updated;
+  }
   if (typeof arrangeApps === 'function') {
     json.apps = arrangeApps(json.apps, home && home.ok && Array.isArray(home.order) ? home : null).filter(x => !x.hidden).map(x => x.app);
   }

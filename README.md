@@ -20,17 +20,28 @@
 - `functions/api/admin.js` — 관리자 키 확인, 30일 쿠키 `ak`.
 - `site/order/` + `functions/api/order/` + `lib/order.js` — 선생님 주문·조사 모으기(웹앱). 조사와 제출은 KV `ORDERS`에 있고, 담당자 화면은 `site/private/order-admin.html`. 항목마다 **가리기**를 체크하면 선생님 화면에 보이지 않고 제출도 막힙니다(매장에 없는 메뉴·품절). 지우는 대신 가려 두면 나중에 체크만 풀어 되살릴 수 있습니다.
 - `functions/api/home.js` + `lib/home.js` + `site/arrange.js` — 공개 대문 앱 카드의 **순서·숨김**. 전용 대문 「관리」의 "공개 대문 앱 순서 · 숨김"에서 ↑ ↓·숨김을 고치고 「저장」하면 배포 없이 반영됩니다. KV `ORDERS`의 `home-v1`(직전 값 `home-v1-prev`)에 앱 id 순서와 숨김만 저장하고, 이름·내용은 `apps.json` 그대로입니다. 저장이 없거나 못 읽으면 `apps.json` 순서 그대로 보입니다.
+- `site/private/apps-admin.html` + `functions/api/catalog.js` + `lib/catalog.js` + `site/private/catalog-rules.js` — **앱 관리**. 앱 카드 내용과 내려받기 링크를 화면에서 고치고 「저장」하면 배포 없이 반영됩니다. KV `ORDERS`의 `apps-v1`(카드 내용, 공개)과 `links-v1`(링크, `/api/get`과 관리자만 읽음)에 따로 저장하고 각각 직전 값(`…-prev`)을 둡니다. `catalog-rules.js`는 화면과 서버가 같이 쓰는 검사 규칙입니다. 저장본이 없으면 `apps.json`과 비밀 변수 `LINKS`를 씁니다.
 - `lib/auth.js` — 서명·쿠키 공통 함수(두 잠금이 같이 씀).
-- `test/` — 확인 명령 `node --test test/*.test.mjs`(순서·숨김 검사).
+- `test/` — 확인 명령 `node --test test/*.test.mjs`(순서·숨김, 앱 관리 검사).
 - `site/build.txt` — 배포한 커밋 SHA. 전용 대문의 "배포 확인"이 읽습니다.
 - `index.html`(맨 위) — 옛 주소(piman-code.github.io/DevApps)에서 새 주소로 넘겨 주는 안내 페이지.
 - 저장소에 없는 파일(.gitignore): `다운로드_비밀키.txt`, `파이맨전용_비밀키.txt`, `links.json`, `.dev.vars`. **절대 커밋하지 않기.**
 
 ## 관리 방법
 
-- **새 버전**: 구글 드라이브에 zip 업로드 → 공유 "링크가 있는 모든 사용자 · 뷰어" → 링크를 `links.json`의 `앱id:windows`(또는 `:mac`)에 넣기 → `site/apps.json`의 `version`, `size`, `sha256`, `site.updated` 수정 → 링크 반영과 배포(아래).
-- **Mac 버전 추가**: `"mac": null`을 `{ "version": "…", "size": "…", "sha256": "…", "start": "…" }`로 바꾸고 `links.json`에 `앱id:mac` 링크 추가. `start`가 있으면 그 운영체제에서는 앱 공통 `start` 대신 보입니다.
-- **새 앱**: `apps` 배열에 항목을 복사해 `id`, `name`, `symbol`, `color`, `category`, `summary`, `features`, `requirements`, `start`를 채웁니다.
+앱 카드와 내려받기 링크는 **전용 대문(`/private/`) → 나만 쓰는 도구 → 앱 관리**에서 고칩니다(2026-11-14~). 배포도, 터미널도 필요 없습니다.
+
+- **새 버전**: 구글 드라이브에 zip 업로드 → 공유 "링크가 있는 모든 사용자 · 뷰어" → 앱 관리에서 그 앱을 고르고 Windows/Mac의 버전·크기·확인값과 **내려받기 링크**를 고친 뒤 「저장」. 대문의 "마지막 업데이트"는 저장한 날로 바뀝니다.
+- **Mac 버전 추가**: 그 앱의 "Mac 버전 · 있음"을 체크하고 버전·크기·링크를 넣습니다. 그 운영체제의 "실행 방법"을 적으면 앱 공통 실행 방법 대신 보입니다.
+- **새 앱**: 「＋ 앱 추가」 → id(영문 소문자·숫자·-, 저장한 뒤에는 바꿀 수 없음)와 내용을 채우고 저장. 새 앱은 대문 맨 위에 나옵니다. **지우기**는 그 앱의 「이 앱 지우기」(링크도 같이 지워짐).
+- **전체 파일 폴더 링크**: 앱 목록 맨 아래 "전체 파일 폴더".
+- 「직전 저장으로」는 앱 내용과 링크를 함께 바로 앞 저장으로 되돌립니다. 링크는 https:// 주소만 받습니다.
+- **한 번 저장한 뒤에는 저장본이 정본입니다.** 그 뒤 `site/apps.json`이나 비밀 변수 `LINKS`를 고쳐도 반영되지 않고, 저장소를 읽지 못할 때의 예비값으로만 쓰입니다. 파일 방식으로 돌아가려면 저장 직후 「직전 저장으로」를 쓰거나 Cloudflare KV에서 `apps-v1`·`links-v1` 값을 `{"v":1,"none":true}`로 바꿉니다.
+- 설치 파일 자체를 사이트에 올리는 기능은 없습니다(파일은 계속 구글 드라이브에).
+
+저장본이 없을 때의 파일 방식(예비):
+
+- `site/apps.json`의 `apps` 배열에 `id`, `name`, `symbol`, `color`, `category`, `summary`, `features`, `requirements`, `start`, `windows`/`mac`(`{ "version", "size", "sha256", "start" }` 또는 `null`)을 적고, 링크는 `links.json`의 `앱id:windows`(또는 `:mac`)에 넣어 아래 '링크 반영'으로 올립니다.
 - **순서 바꾸기·잠시 숨기기**: 전용 대문(`/private/`) → 관리 → "공개 대문 앱 순서 · 숨김". 숨김은 대문 목록에서만 빼는 것이라 `apps.json`과 내려받기 주소는 그대로입니다(비밀로 만드는 기능이 아님). 저장한 뒤 `apps.json`에 새로 넣은 앱은 맨 위에 보입니다. 「직전 저장으로」는 바로 앞 저장으로 한 단계 되돌립니다.
 - **전용 도구 추가**: `site/private/`에 HTML을 넣고 `site/private/index.html`의 "나만 쓰는 도구" 장면에 카드를 하나 추가합니다. `/private/` 아래는 자동으로 잠깁니다.
 - 확인값: `shasum -a 256 파일.zip`
@@ -45,7 +56,7 @@
 
 ## 링크 반영
 
-다운로드 링크(`links.json`)는 비밀 변수라 맥에서 넣습니다. 배포는 필요 없고 바로 적용됩니다.
+앱 관리 화면에서 한 번도 저장하지 않았을 때만 쓰는 방식입니다(저장본이 있으면 그쪽 링크가 쓰입니다). 다운로드 링크(`links.json`)는 비밀 변수라 맥에서 넣습니다. 배포는 필요 없고 바로 적용됩니다.
 
 ```
 python3 -c "import json;print(json.dumps(json.load(open('links.json')),ensure_ascii=False),end='')" | npx wrangler pages secret put LINKS --project-name piman-devapps

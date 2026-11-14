@@ -4,9 +4,11 @@
 //       관리자 쿠키가 있으면 hasPrev(되돌릴 직전 값이 있는지)도 준다.
 // PUT : 관리자만(쿠키 ak) · 같은 출처만. 본문 { order, hidden } 으로 전체를 바꾼다.
 //       저장 직전 값은 home-v1-prev에 남긴다. 본문 { restore: true } 는 그 직전 값으로 되돌린다(두 값을 맞바꿈).
-// 여기서 나가는 id는 이미 공개된 apps.json의 id뿐이다.
+// GET은 「앱 관리」에서 저장한 앱 카드 내용도 같이 준다: apps([...] 또는 저장본이 없으면 null), updated('YYYY-MM-DD').
+//       공개 대문에 그대로 보이는 내용이다. **내려받기 링크(links-v1)는 여기서 읽지도 주지도 않는다**(/api/get, /api/catalog만).
 import { isAdmin, sameOrigin, json } from '../../lib/auth.js';
 import { KV_KEY, KV_PREV, MAX_BODY, sanitize, read } from '../../lib/home.js';
+import { readApps, appsOf } from '../../lib/catalog.js';
 
 const view = (v, extra = {}) => ({ ok: true, order: v ? v.order : null, hidden: v ? v.hidden : [], updated_at: v ? v.updated_at || null : null, ...extra });
 
@@ -14,8 +16,9 @@ export async function onRequestGet({ request, env }) {
   if (!env.ORDERS) return json({ ok: false, error: 'not-configured' }, 500);
   const admin = await isAdmin(request, env);
   try {
-    const v = await read(env, KV_KEY);
-    return json(view(v, admin ? { hasPrev: !!(await read(env, KV_PREV)) } : {}));
+    const [v, a] = await Promise.all([read(env, KV_KEY), readApps(env)]);
+    const apps = { apps: appsOf(a), updated: appsOf(a) ? a.updated || null : null };
+    return json(view(v, admin ? { ...apps, hasPrev: !!(await read(env, KV_PREV)) } : apps));
   } catch {
     return json({ ok: false, error: 'storage' }, 503);
   }

@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>앱 관리 · DevApps</title>
+<link rel="icon" href="/icon.svg?v=3" type="image/svg+xml">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+/* 전용 대문(site/private/index.html)과 같은 색 체계 */
+:root{--bg:#f6f5f2;--surface:#fff;--surface-2:#f0eee9;--text:#1d1c1a;--muted:#6b6862;--line:#e3e0d9;--accent:#1d1c1a;--accent-text:#fff;--mark:#b4532a;--ok:#1f8a70}
+@media (prefers-color-scheme:dark){:root{--bg:#141413;--surface:#1d1d1b;--surface-2:#262624;--text:#f0eee9;--muted:#a29f98;--line:#33322f;--accent:#f0eee9;--accent-text:#141413;--mark:#e8926b;--ok:#5fc7a8}}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--text);font-family:"Pretendard Variable",Pretendard,-apple-system,"Malgun Gothic",sans-serif;line-height:1.55;word-break:keep-all}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--text);outline-offset:2px}
+.wrap{max-width:1080px;margin:0 auto;padding:20px 20px 60px}
+.top{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px}
+.top a{color:var(--muted);font-size:14px;font-weight:600;text-decoration:none}
+.top a:hover{color:var(--text)}
+h1{font-size:clamp(24px,4vw,30px);margin:10px 0 4px;letter-spacing:-.02em;display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+.state{font-size:13.5px;font-weight:700;color:var(--muted)}
+.state.on{color:var(--ok)}
+.state.off{color:var(--mark)}
+.sub{margin:0;color:var(--muted);font-size:14.5px;max-width:760px}
+.bar{position:sticky;top:0;z-index:5;display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:16px 0 0;padding:10px 0;background:var(--bg);border-bottom:1px solid var(--line)}
+.sm{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:8px 13px;font-size:13.5px;font-weight:700}
+.sm:hover:not(:disabled){border-color:var(--text)}
+.sm:disabled{opacity:.35;cursor:default}
+.sm.primary:not(:disabled){background:var(--accent);color:var(--accent-text);border-color:var(--accent)}
+.sm.danger{color:var(--mark)}
+#msg{flex:1 1 100%;margin:0;min-height:1.4em;font-size:14px;color:var(--muted)}
+#msg.err{color:var(--mark);font-weight:600}
+#msg:focus{outline:none}
+.cols{display:grid;grid-template-columns:280px minmax(0,1fr);gap:18px;margin-top:16px;align-items:start}
+@media (max-width:760px){.cols{grid-template-columns:1fr}.wrap{padding:16px 16px 48px}}
+.list{display:grid;gap:6px;margin:0;padding:0;list-style:none}
+.list button{width:100%;text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:9px 12px;display:flex;align-items:center;gap:10px}
+.list button[aria-current="true"]{border-color:var(--text);box-shadow:inset 3px 0 0 var(--text)}
+.list button.changed{border-color:var(--mark)}
+.list .tile{flex:none;width:30px;height:30px;border-radius:9px;display:grid;place-items:center;color:#fff;font-weight:700;font-size:15px}
+.list .nm{flex:1;min-width:0;font-weight:700;font-size:14.5px;overflow-wrap:anywhere}
+.list .nm small{display:block;font-weight:500;font-size:12px;color:var(--muted)}
+.badge{flex:none;font-size:11.5px;font-weight:700;color:var(--mark);border:1px solid var(--mark);border-radius:999px;padding:1px 7px}
+.list .add{justify-content:center;border-style:dashed;background:transparent;font-weight:700;font-size:14px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:20px;min-width:0}
+.panel h2{font-size:18px;margin:0 0 4px;display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.panel h3{font-size:15px;margin:22px 0 2px;padding-top:16px;border-top:1px solid var(--line);display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.panel h3 label{display:inline-flex;align-items:center;gap:6px;font-size:13.5px;font-weight:600;color:var(--muted);cursor:pointer}
+.f{display:grid;grid-template-columns:130px minmax(0,1fr);gap:10px 14px;align-items:start;margin-top:12px}
+@media (max-width:560px){.f{grid-template-columns:1fr;gap:4px 0}.f label{margin-top:8px}}
+.f label{font-size:14px;font-weight:700;padding-top:9px}
+.f label small{display:block;font-weight:500;font-size:12px;color:var(--muted)}
+.f input[type=text],.f input[type=url],.f textarea{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:10px;background:var(--bg);font-size:15px}
+.f textarea{min-height:92px;resize:vertical;line-height:1.5}
+.f input:read-only{color:var(--muted)}
+.f input:disabled,.f textarea:disabled{opacity:.45}
+.f .pair{display:flex;gap:8px;align-items:center}
+.f input[type=color]{flex:none;width:44px;height:40px;padding:2px;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
+.f input.mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+.hint{grid-column:2;margin:-4px 0 0;font-size:12.5px;color:var(--muted)}
+@media (max-width:560px){.hint{grid-column:1}}
+.empty{color:var(--muted);font-size:14.5px}
+input[type=checkbox]{width:17px;height:17px;margin:0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top"><a href="/private/#tools">← 파이맨 전용</a><a href="/#apps" target="_blank" rel="noopener">공개 대문 앱 목록 ↗</a><a href="/private/#admin">순서 · 숨김 →</a></div>
+  <h1>앱 관리 <span class="state" id="state">불러오는 중…</span></h1>
+  <p class="sub">공개 대문의 앱 카드 내용과 내려받기 링크를 고칩니다. 「저장」을 눌러야 반영되고, 배포는 필요 없습니다. 설치 파일은 지금처럼 구글 드라이브에 올리고 그 공유 링크를 여기에 넣습니다. 링크는 다운로드 비밀키를 넣은 선생님에게만 나갑니다.</p>
+
+  <div class="bar">
+    <button type="button" class="sm primary" id="save" disabled>저장</button>
+    <button type="button" class="sm" id="cancel" disabled>변경 취소</button>
+    <button type="button" class="sm" id="restore" disabled title="바로 앞에 저장했던 내용과 링크로 되돌립니다">직전 저장으로</button>
+    <button type="button" class="sm" id="reload">다시 불러오기</button>
+    <p id="msg" role="status"></p>
+  </div>
+
+  <div class="cols">
+    <ul class="list" id="list" aria-label="앱 목록"></ul>
+    <fieldset class="panel" id="panel" style="margin:0" disabled><p class="empty">불러오는 중입니다.</p></fieldset>
+  </div>
+</div>
+
+<script type="module">
+// 앱 카드 내용(apps)과 내려받기 링크(links)를 고치는 화면. 서버는 /api/catalog (관리자만).
+// base = 서버에 저장된 모습, draft = 고치는 중인 모습. 둘이 다르면 「저장」이 켜진다.
+// 검사는 서버와 같은 파일(catalog-rules.js)로 한다. 서버 값을 못 읽었으면 편집을 열지 않는다.
+// 화면에 넣는 글자는 모두 textContent / value 로만 넣는다.
+import { sanitizeCatalog, OSES, FOLDER, ID, LIMITS } from './catalog-rules.js';
+
+const $ = s => document.querySelector(s);
+const el = (tag, cls, text) => { const x = document.createElement(tag); if (cls) x.className = cls; if (text != null) x.textContent = text; return x; };
+const list = $('#list'), panel = $('#panel'), state = $('#state'), msg = $('#msg');
+const bSave = $('#save'), bCancel = $('#cancel'), bRestore = $('#restore'), bReload = $('#reload');
+const OS_NAME = { windows: 'Windows', mac: 'Mac' };
+
+let fileApps = null, base = null, draft = null, hasPrev = false, busy = false, ready = false, cur = null, orphans = [];
+const fresh = new Set(); // 이번에 새로 넣은 앱의 id(저장 전까지만 id를 고칠 수 있다)
+
+const say = (t, err) => { msg.textContent = t || ''; msg.className = err ? 'err' : ''; };
+const str = v => (typeof v === 'string' ? v : '');
+// 화면에서 다루기 쉬운 모양으로(빈 값은 ''·null). 저장할 때 payload()가 서버 모양으로 되돌린다.
+const normBuild = b => (b && typeof b === 'object' ? { version: str(b.version), size: str(b.size), sha256: str(b.sha256), start: str(b.start) } : null);
+const norm = a => ({
+  id: str(a.id), name: str(a.name), symbol: str(a.symbol), color: /^#[0-9a-fA-F]{6}$/.test(a.color) ? a.color.toLowerCase() : '#2f6fde', category: str(a.category), summary: str(a.summary),
+  features: Array.isArray(a.features) ? a.features.map(str) : [], requirements: str(a.requirements), start: str(a.start), web: str(a.web),
+  windows: normBuild(a.windows), mac: normBuild(a.mac),
+});
+const copy = v => JSON.parse(JSON.stringify(v));
+const linkKey = (id, os) => id + ':' + os;
+function payload(d) {
+  const apps = d.apps.map(a => {
+    const out = { id: a.id, name: a.name, symbol: a.symbol, color: a.color, category: a.category, summary: a.summary, features: a.features.map(f => f.trim()).filter(Boolean), requirements: a.requirements, start: a.start };
+    if (a.web.trim()) out.web = a.web.trim();
+    for (const os of OSES) {
+      const b = a[os];
+      out[os] = b ? Object.assign({ version: b.version, size: b.size }, b.sha256.trim() ? { sha256: b.sha256.trim().toLowerCase() } : {}, b.start.trim() ? { start: b.start } : {}) : null;
+    }
+    return out;
+  });
+  const links = {};
+  for (const k of Object.keys(d.links)) if (d.links[k].trim()) links[k] = d.links[k].trim();
+  return { apps, links };
+}
+// 앱 하나의 지문(내용 + 두 링크). 변경 건수와 강조 표시에 쓴다.
+const print = (d, id) => { const a = d.apps.find(x => x.id === id); return a ? JSON.stringify([a, str(d.links[linkKey(id, 'windows')]).trim(), str(d.links[linkKey(id, 'mac')]).trim()]) : null; };
+function changedIds() {
+  if (!ready) return [];
+  const ids = new Set([...base.apps.map(a => a.id), ...draft.apps.map(a => a.id)]);
+  const out = [...ids].filter(id => print(base, id) !== print(draft, id));
+  if (str(base.links[FOLDER]).trim() !== str(draft.links[FOLDER]).trim()) out.push(FOLDER);
+  // 순서만 바뀐 경우는 없다(이 화면은 순서를 바꾸지 않는다)
+  return out;
+}
+// 저장을 막지는 않는 안내: 버전 정보와 링크가 짝이 맞지 않는 앱
+function notes(a) {
+  const out = [];
+  for (const os of OSES) {
+    const has = !!a[os], link = !!str(draft.links[linkKey(a.id, os)]).trim();
+    if (has && !link) out.push(OS_NAME[os] + ' 링크 없음');
+    if (!has && link) out.push(OS_NAME[os] + ' 정보 없음');
+  }
+  return out;
+}
+
+function drawList() {
+  const ch = new Set(changedIds());
+  list.replaceChildren();
+  if (!ready) return;
+  const add = el('button', 'add', '＋ 앱 추가'); add.type = 'button'; add.disabled = busy; add.addEventListener('click', addApp);
+  const liAdd = el('li'); liAdd.appendChild(add); list.appendChild(liAdd);
+  draft.apps.forEach(a => {
+    const li = el('li'), b = el('button', ch.has(a.id) ? 'changed' : ''), tile = el('span', 'tile', a.symbol), nm = el('span', 'nm', a.name || '(이름 없음)');
+    b.type = 'button'; b.disabled = busy; b.setAttribute('aria-current', String(cur === a.id));
+    tile.style.background = a.color; tile.setAttribute('aria-hidden', 'true');
+    nm.appendChild(el('small', null, a.id + (fresh.has(a.id) ? ' · 새 앱' : '')));
+    b.append(tile, nm);
+    const n = notes(a); if (n.length) { const bd = el('span', 'badge', n[0].replace(/^(Windows|Mac) /, '')); bd.title = n.join(', '); b.appendChild(bd); }
+    b.addEventListener('click', () => select(a.id));
+    li.appendChild(b); list.appendChild(li);
+  });
+  const li = el('li'), f = el('button', ch.has(FOLDER) ? 'changed' : ''), nm = el('span', 'nm', '전체 파일 폴더');
+  f.type = 'button'; f.disabled = busy; f.setAttribute('aria-current', String(cur === FOLDER));
+  nm.appendChild(el('small', null, '공개 대문 마지막 장면의 링크'));
+  f.append(nm); f.addEventListener('click', () => select(FOLDER)); li.appendChild(f); list.appendChild(li);
+}
+function drawBar() {
+  const n = changedIds().length, lock = busy || !ready;
+  bSave.disabled = lock || !n; bSave.textContent = n ? `저장 (변경 ${n}건)` : '저장';
+  bCancel.disabled = lock || !n; bRestore.disabled = lock || !hasPrev; bReload.disabled = busy;
+  panel.disabled = lock;
+}
+const touched = () => { say(''); drawList(); drawBar(); };
+
+// 입력 칸 한 줄. set(value)가 draft를 고친다.
+function field(grid, label, hint, opt) {
+  const id = 'f' + Math.random().toString(36).slice(2, 9), lab = el('label', null, label), input = el(opt.area ? 'textarea' : 'input');
+  lab.htmlFor = id; input.id = id;
+  if (!opt.area) input.type = opt.type || 'text';
+  if (opt.mono) input.className = 'mono';
+  if (opt.max) input.maxLength = opt.max;
+  if (opt.placeholder) input.placeholder = opt.placeholder;
+  input.spellcheck = false; input.autocomplete = 'off';
+  input.value = opt.value; input.disabled = !!opt.disabled; input.readOnly = !!opt.readOnly;
+  input.addEventListener('input', () => { opt.set(input.value); touched(); });
+  if (opt.change) input.addEventListener('change', () => opt.change(input));
+  grid.append(lab, input);
+  if (hint) grid.appendChild(el('p', 'hint', hint));
+  return input;
+}
+
+function drawPanel(focusId) {
+  panel.replaceChildren();
+  if (!ready) { panel.appendChild(el('p', 'empty', '불러오지 못했습니다.')); return; }
+  if (cur === FOLDER) {
+    panel.appendChild(el('h2', null, '전체 파일 폴더'));
+    const g = el('div', 'f'); panel.appendChild(g);
+    field(g, '폴더 링크', '공개 대문 마지막 장면의 「전체 파일 폴더」가 여는 주소입니다. https:// 로 시작해야 하고, 비우면 링크가 동작하지 않습니다.', {
+      type: 'url', mono: true, max: LIMITS.url, placeholder: 'https://drive.google.com/…', value: str(draft.links[FOLDER]), set: v => { draft.links[FOLDER] = v; },
+    });
+    return;
+  }
+  const a = draft.apps.find(x => x.id === cur);
+  if (!a) { panel.appendChild(el('p', 'empty', '왼쪽에서 앱을 고르거나 「＋ 앱 추가」를 누르세요.')); return; }
+  const isNew = fresh.has(a.id), h = el('h2', null, a.name || '(이름 없음)'), del = el('button', 'sm danger', '이 앱 지우기');
+  del.type = 'button'; del.style.marginLeft = 'auto';
+  del.addEventListener('click', () => {
+    if (!confirm('「' + (a.name || a.id) + '」 앱을 목록에서 지울까요? 내려받기 링크도 같이 지워집니다. 「저장」을 눌러야 반영되고, 저장 전에는 「변경 취소」로 되돌릴 수 있습니다.')) return;
+    draft.apps = draft.apps.filter(x => x !== a); for (const os of OSES) delete draft.links[linkKey(a.id, os)];
+    fresh.delete(a.id); cur = draft.apps.length ? draft.apps[0].id : FOLDER; drawPanel(); touched();
+  });
+  h.appendChild(del); panel.appendChild(h);
+  const g = el('div', 'f'); panel.appendChild(g);
+  field(g, 'id', isNew ? '주소와 링크에 쓰이는 이름입니다. 영문 소문자·숫자·- 만. 저장한 뒤에는 바꿀 수 없습니다.' : '저장한 앱의 id는 바꿀 수 없습니다(링크와 순서가 이 이름에 묶여 있습니다).', {
+    mono: true, max: 40, value: a.id, readOnly: !isNew, set: () => {},
+    change: input => {
+      const v = input.value.trim().toLowerCase();
+      if (v === a.id) { input.value = a.id; return; }
+      if (v === FOLDER) { say('id로 "folder"는 쓸 수 없습니다(전체 파일 폴더 링크의 이름입니다).', true); input.value = a.id; return; }
+      if (!ID.test(v)) { say('id는 영문 소문자·숫자·- 만, 40자까지입니다.', true); input.value = a.id; return; }
+      if (draft.apps.some(x => x !== a && x.id === v) || base.apps.some(x => x.id === v)) { say('id "' + v + '"는 이미 쓰고 있거나 방금 지운 앱의 것입니다. 다른 이름을 써 주세요.', true); input.value = a.id; return; }
+      for (const os of OSES) { const old = linkKey(a.id, os); if (old in draft.links) { draft.links[linkKey(v, os)] = draft.links[old]; delete draft.links[old]; } }
+      fresh.delete(a.id); fresh.add(v); a.id = v; cur = v; input.value = v; touched();
+    },
+  });
+  field(g, '이름', null, { max: LIMITS.name, value: a.name, set: v => { a.name = v; h.firstChild.nodeValue = v || '(이름 없음)'; } });
+  // 기호 + 색
+  { const lab = el('label', null, '기호 · 색'), pair = el('div', 'pair'), sym = el('input'), col = el('input'), hex = el('input');
+    sym.type = 'text'; sym.value = a.symbol; sym.maxLength = 8; sym.style.maxWidth = '90px'; sym.setAttribute('aria-label', '기호');
+    col.type = 'color'; col.value = a.color; col.setAttribute('aria-label', '색');
+    hex.type = 'text'; hex.className = 'mono'; hex.value = a.color; hex.maxLength = 7; hex.style.maxWidth = '120px'; hex.setAttribute('aria-label', '색 값');
+    sym.addEventListener('input', () => { a.symbol = sym.value; touched(); });
+    col.addEventListener('input', () => { a.color = col.value.toLowerCase(); hex.value = a.color; touched(); });
+    hex.addEventListener('input', () => { a.color = hex.value.trim(); if (/^#[0-9a-fA-F]{6}$/.test(a.color)) col.value = a.color; touched(); });
+    pair.append(sym, col, hex); g.append(lab, pair); g.appendChild(el('p', 'hint', '카드 왼쪽 위 네모에 들어가는 글자 하나(예: ☕ ✓ %)와 바탕색입니다.')); }
+  field(g, '분류', '예: 수업 · 평가 · 업무 · 학급운영', { max: LIMITS.category, value: a.category, set: v => { a.category = v; } });
+  field(g, '한 줄 설명', null, { max: LIMITS.summary, value: a.summary, set: v => { a.summary = v; } });
+  field(g, '기능', '한 줄에 하나씩, ' + LIMITS.features + '줄까지.', { area: true, value: a.features.join('\n'), set: v => { a.features = v.split('\n'); } });
+  field(g, '필요한 것', '카드의 「필요한 것 · 실행 방법」을 펼치면 보입니다.', { max: LIMITS.requirements, value: a.requirements, set: v => { a.requirements = v; } });
+  field(g, '실행 방법', 'Windows/Mac 칸에 따로 적지 않으면 이 문장이 보입니다.', { max: LIMITS.start, value: a.start, set: v => { a.start = v; } });
+  field(g, '바로 열기 주소', '설치 없이 브라우저에서 여는 웹앱일 때만. https:// 주소나 /order/ 같은 이 사이트 안 경로. 넣으면 다운로드 단추 대신 「바로 열기」가 됩니다.', {
+    mono: true, max: LIMITS.url, placeholder: '비워 두면 내려받는 앱', value: a.web, set: v => { a.web = v; },
+  });
+
+  for (const os of OSES) {
+    const h3 = el('h3', null, OS_NAME[os] + ' 버전'), lab = el('label'), box = el('input');
+    box.type = 'checkbox'; box.id = 'has-' + os; box.checked = !!a[os];
+    lab.append(box, document.createTextNode('있음')); h3.appendChild(lab); panel.appendChild(h3);
+    box.addEventListener('change', () => {
+      a[os] = box.checked ? { version: '', size: '', sha256: '', start: '' } : null;
+      drawPanel('has-' + os); touched();
+    });
+    const b = a[os], g2 = el('div', 'f'); panel.appendChild(g2);
+    if (b) {
+      field(g2, '버전', null, { max: LIMITS.version, placeholder: '예: 1.0.17', value: b.version, set: v => { b.version = v; } });
+      field(g2, '크기', null, { max: LIMITS.size, placeholder: '예: 131MB', value: b.size, set: v => { b.size = v; } });
+      field(g2, '확인값(SHA256)', '선택. 터미널에서 shasum -a 256 파일.zip 으로 나온 64자.', { mono: true, max: 64, value: b.sha256, set: v => { b.sha256 = v; } });
+      field(g2, '실행 방법', '선택. 이 운영체제에서만 다르게 안내할 때.', { max: LIMITS.start, value: b.start, set: v => { b.start = v; } });
+    }
+    field(g2, '내려받기 링크', b ? '구글 드라이브 공유 링크("링크가 있는 모든 사용자 · 뷰어"). 비우면 다운로드를 눌러도 받을 수 없습니다.' : '위 「있음」을 체크하고 버전·크기를 적어야 대문에 다운로드 단추가 생깁니다.', {
+      type: 'url', mono: true, max: LIMITS.url, placeholder: 'https://drive.google.com/…', value: str(draft.links[linkKey(a.id, os)]), set: v => { draft.links[linkKey(a.id, os)] = v; },
+    });
+  }
+  if (focusId) { const f = document.getElementById(focusId); if (f) f.focus(); }
+}
+
+function select(id) { cur = id; drawList(); drawPanel(); }
+function addApp() {
+  if (busy || !ready) return;
+  if (draft.apps.length >= 100) { say('앱은 100개까지입니다.', true); return; }
+  const taken = new Set([...draft.apps.map(a => a.id), ...base.apps.map(a => a.id)]);
+  let id = 'new-app', n = 2; while (taken.has(id)) id = 'new-app-' + n++;
+  // 새 앱은 맨 앞에(순서·숨김을 저장해 둔 경우에도 새 앱은 대문 맨 위에 나온다)
+  draft.apps.unshift(norm({ id, name: '새 앱', symbol: '★', color: '#2f6fde', category: '수업', summary: '', features: [] }));
+  fresh.add(id); cur = id; drawPanel(); touched();
+  const first = panel.querySelector('input'); if (first) { first.focus(); first.select(); }
+  say('새 앱을 넣었습니다. id와 내용을 채운 뒤 「저장」을 눌러 주세요.');
+}
+
+// 서버가 준 값(j)을 기준으로 삼는다. apps가 null이면 저장본이 없는 것이라 apps.json을 쓴다.
+function adopt(j) {
+  const saved = Array.isArray(j.apps) && j.apps.length;
+  base = { apps: (saved ? j.apps : fileApps).map(norm), links: {} };
+  // 지금 목록에 있는 앱의 링크와 폴더 링크만 다룬다. 그 밖의 이름(옛 LINKS에 남은, 목록에 없는 앱의 링크)은 화면에 둘 곳이 없어
+  // 저장본에 넣지 않는다(서버도 받지 않는다). 몇 개가 빠지는지는 이름만 알려 준다.
+  const ids = new Set(base.apps.map(a => a.id)); orphans = [];
+  for (const k of Object.keys(j.links || {})) {
+    if (typeof j.links[k] !== 'string') continue;
+    const cut = k.lastIndexOf(':');
+    if (k === FOLDER || (cut > 0 && OSES.includes(k.slice(cut + 1)) && ids.has(k.slice(0, cut)))) base.links[k] = j.links[k];
+    else orphans.push(k);
+  }
+  draft = copy(base); hasPrev = !!j.hasPrev; ready = true; fresh.clear();
+  if (cur !== FOLDER && !draft.apps.some(a => a.id === cur)) cur = draft.apps.length ? draft.apps[0].id : FOLDER;
+  state.textContent = saved ? '저장본 사용 중' : '저장 없음 · apps.json과 LINKS 사용 중'; state.className = 'state ' + (saved ? 'on' : '');
+  state.title = saved && j.updated_at ? '마지막 저장 ' + new Date(j.updated_at).toLocaleString('ko-KR') : '';
+  drawList(); drawPanel(); drawBar();
+  if (orphans.length) say(orphanNote());
+}
+const orphanNote = () => '목록에 없는 앱의 링크 ' + orphans.length + '개(' + orphans.slice(0, 6).join(', ') + (orphans.length > 6 ? ' …' : '') + ')가 지금 값에 남아 있습니다. 이 화면에서 저장하면 그 링크는 저장본에 들어가지 않습니다.';
+function blocked(t) { ready = false; state.textContent = '불러오지 못함'; state.className = 'state off'; say(t, true); drawList(); drawPanel(); drawBar(); }
+
+async function load() {
+  if (busy) return;
+  busy = true; ready = false; state.textContent = '불러오는 중…'; state.className = 'state'; say(''); drawBar();
+  try {
+    const [a, r] = await Promise.all([
+      fetch('/apps.json', { cache: 'no-store' }).then(x => (x.ok ? x.json() : null)),
+      fetch('/api/catalog', { cache: 'no-store', credentials: 'same-origin' }),
+    ]);
+    const j = await r.json().catch(() => null);
+    busy = false;
+    if (r.status === 401) return blocked('관리자 키가 풀렸습니다. 이 화면을 새로 고쳐 키를 다시 넣어 주세요.');
+    if (!j || !j.ok) return blocked(j && j.error === 'not-configured' ? '저장소(KV)가 연결되지 않아 고칠 수 없습니다.' : '서버에 저장된 내용을 읽지 못해 편집을 막았습니다. 잠시 뒤 「다시 불러오기」를 눌러 주세요.');
+    if (!a || !Array.isArray(a.apps) || !a.apps.length) return blocked('기본 앱 목록(apps.json)을 읽지 못했습니다. 「다시 불러오기」를 눌러 주세요.');
+    fileApps = a.apps; adopt(j);
+  } catch { busy = false; blocked('연결이 끊겼습니다. 잠시 뒤 「다시 불러오기」를 눌러 주세요.'); }
+}
+async function send(body, done) {
+  if (busy || !ready) return;
+  busy = true; say('저장하는 중…'); drawList(); drawBar();
+  let r = null, j = null;
+  try {
+    r = await fetch('/api/catalog', { method: 'PUT', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    j = await r.json().catch(() => null);
+  } catch {}
+  busy = false;
+  if (r && r.ok && j && j.ok) { adopt(j); say(done + (orphans.length ? ' ' + orphanNote() : '')); }
+  else {
+    if (!r) say('연결이 끊겨 저장하지 못했습니다. 고친 내용은 그대로 있으니 다시 「저장」을 눌러 주세요.', true);
+    else if (r.status === 401) say('관리자 키가 풀려 저장하지 못했습니다. 이 화면은 그대로 두고, 새 탭에서 /private/ 을 열어 키를 다시 넣은 뒤 여기서 「저장」을 다시 눌러 주세요. 고친 내용은 그대로 있습니다.', true);
+    else if (r.status === 404) { hasPrev = false; say('되돌릴 직전 저장이 없습니다.', true); }
+    else if (r.status === 400) say('서버가 받지 않았습니다: ' + ((j && j.detail) || '형식 오류') + ' 고친 내용은 그대로 있습니다.', true);
+    else say('저장하지 못했습니다(' + r.status + '). 고친 내용은 그대로 있으니 잠시 뒤 다시 「저장」을 눌러 주세요.', true);
+    drawList(); drawBar();
+  }
+  // 누른 단추가 꺼지면서 초점이 사라지지 않게 결과 문구로 옮긴다
+  if (!document.activeElement || document.activeElement === document.body || document.activeElement.disabled) { msg.tabIndex = -1; msg.focus({ preventScroll: true }); }
+}
+
+bSave.addEventListener('click', () => {
+  if (busy || !ready) return;
+  const body = payload(draft), check = sanitizeCatalog(body); // 서버와 같은 검사를 먼저 돌린다
+  if (!check.ok) {
+    if (check.at >= 0 && body.apps[check.at]) { cur = body.apps[check.at].id; drawList(); drawPanel(); }
+    say((check.at >= 0 && body.apps[check.at] ? '「' + (body.apps[check.at].name || body.apps[check.at].id) + '」: ' : '') + check.error, true);
+    return;
+  }
+  const loose = draft.apps.filter(a => notes(a).length).map(a => '· ' + (a.name || a.id) + ': ' + notes(a).join(', '));
+  if (loose.length && !confirm('버전 정보와 링크의 짝이 맞지 않는 앱이 있습니다.\n\n' + loose.join('\n') + '\n\n이대로 저장할까요? (링크가 없으면 다운로드를 눌러도 받을 수 없고, 정보가 없으면 "준비 중"으로 보입니다.)')) return;
+  send(body, '저장했습니다. 공개 대문과 내려받기에는 길어도 1분 안에 반영됩니다.');
+});
+bCancel.addEventListener('click', () => { if (busy || !ready) return; draft = copy(base); fresh.clear(); if (cur !== FOLDER && !draft.apps.some(a => a.id === cur)) cur = draft.apps[0].id; say('고치던 내용을 버렸습니다.'); drawList(); drawPanel(); drawBar(); });
+bRestore.addEventListener('click', () => {
+  if (busy || !ready) return;
+  if (!confirm((changedIds().length ? '지금 고치던 내용은 사라집니다. ' : '') + '직전에 저장했던 앱 내용과 링크로 되돌릴까요? 한 번 더 누르면 다시 지금 것으로 돌아옵니다.')) return;
+  send({ restore: true }, '직전 저장으로 되돌렸습니다.');
+});
+bReload.addEventListener('click', () => { if (changedIds().length && !confirm('고치던 내용을 버리고 서버 값을 다시 불러올까요?')) return; load(); });
+window.addEventListener('beforeunload', e => { if (changedIds().length) { e.preventDefault(); e.returnValue = ''; } });
+load();
+</script>
+</body>
+</html>
